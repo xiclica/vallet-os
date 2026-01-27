@@ -9,6 +9,7 @@ function App() {
     const [links, setLinks] = useState<main.Link[]>([]);
     const [editingLink, setEditingLink] = useState<main.Link | null>(null);
     const [searchResults, setSearchResults] = useState<main.Link[]>([]);
+    const [activeTab, setActiveTab] = useState('links');
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Form state
@@ -136,90 +137,160 @@ function App() {
         return (
             <div className="container admin-container">
                 <div className="admin-panel">
-                    <div className="admin-header">
-                        <h2>Administrar Links</h2>
-                        <button className="close-btn" onClick={() => {
-                            setShowAdmin(false);
-                            SetLauncherSize();
-                        }}>✕</button>
-                    </div>
-
-                    <div className="admin-content">
-                        <div className="form-section">
-                            <h3>{editingLink ? 'Editar Link' : 'Nuevo Link'}</h3>
-                            <form onSubmit={handleSubmitLink}>
-                                <div className="form-group">
-                                    <label>Nombre *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        required
-                                        placeholder="Ej: Google"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>URL *</label>
-                                    <input
-                                        type="url"
-                                        value={formData.url}
-                                        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                                        required
-                                        placeholder="https://www.google.com"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Descripción</label>
-                                    <input
-                                        type="text"
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        placeholder="Buscador web"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Categoría</label>
-                                    <input
-                                        type="text"
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        placeholder="Productividad"
-                                    />
-                                </div>
-                                <div className="form-actions">
-                                    <button type="submit" className="btn-primary">
-                                        {editingLink ? 'Actualizar' : 'Crear'}
-                                    </button>
-                                    {editingLink && (
-                                        <button type="button" className="btn-secondary" onClick={resetForm}>
-                                            Cancelar
-                                        </button>
-                                    )}
-                                </div>
-                            </form>
+                    {/* Sidebar Izquierdo */}
+                    <div className="admin-sidebar">
+                        <div className="sidebar-header">
+                            <div className="logo-icon">V</div>
+                            <span>Vallet OS</span>
                         </div>
 
-                        <div className="links-section">
-                            <h3>Links Guardados ({links.length})</h3>
-                            <div className="links-list">
-                                {links.map((link) => (
-                                    <div key={link.id} className="link-item">
-                                        <div className="link-info">
-                                            <div className="link-name">{link.name}</div>
-                                            <div className="link-url">{link.url}</div>
-                                            {link.description && <div className="link-desc">{link.description}</div>}
-                                            {link.category && <span className="link-category">{link.category}</span>}
+                        <nav className="sidebar-nav">
+                            <button
+                                className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('dashboard')}
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                                Dashboard
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'links' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('links')}
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                                Mis Links
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('settings')}
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+                                Ajustes
+                            </button>
+                        </nav>
+
+                        <div className="sidebar-footer">
+                            <button className="logout-btn" onClick={() => { setShowAdmin(false); SetLauncherSize(); }}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Área de Contenido */}
+                    <div className="admin-main">
+                        <header className="main-header">
+                            <div className="breadcrumb">Configuración / {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</div>
+                            <div className="header-actions">
+                                <button className="close-btn-round" onClick={() => { setShowAdmin(false); SetLauncherSize(); }}>✕</button>
+                            </div>
+                        </header>
+
+                        <div className="main-content-scroll">
+                            {activeTab === 'dashboard' && (
+                                <div className="section-dashboard">
+                                    <h1>Resumen</h1>
+                                    <div className="stats-grid">
+                                        <div className="stat-card">
+                                            <div className="stat-value">{links.length}</div>
+                                            <div className="stat-label">Links Guardados</div>
                                         </div>
-                                        <div className="link-actions">
-                                            <button className="btn-edit" onClick={() => handleEdit(link)}>✎</button>
-                                            <button className="btn-delete" onClick={() => handleDelete(link.id)}>🗑</button>
+                                        <div className="stat-card">
+                                            <div className="stat-value">Activo</div>
+                                            <div className="stat-label">Estado del Sistema</div>
                                         </div>
                                     </div>
-                                ))}
-                                {links.length === 0 && (
-                                    <div className="empty-state">No hay links guardados</div>
-                                )}
-                            </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'links' && (
+                                <div className="section-links">
+                                    <div className="admin-content-grid">
+                                        <div className="form-section">
+                                            <div className="card-header">
+                                                <h3>{editingLink ? 'Editar Link' : 'Nuevo Link'}</h3>
+                                                <p>Completa la información para guardar un nuevo acceso directo.</p>
+                                            </div>
+                                            <form onSubmit={handleSubmitLink} className="modern-form">
+                                                <div className="form-group">
+                                                    <label>Nombre del sitio</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.name}
+                                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                        required
+                                                        placeholder="Ej: Workspace Principal"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>URL o Comando</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.url}
+                                                        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                                                        required
+                                                        placeholder="https://... o comando de app"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Descripción (Opcional)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.description}
+                                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                        placeholder="Breve descripción..."
+                                                    />
+                                                </div>
+                                                <div className="form-actions">
+                                                    <button type="submit" className="btn-save">
+                                                        {editingLink ? 'Guardar Cambios' : 'Crear Link'}
+                                                    </button>
+                                                    {editingLink && (
+                                                        <button type="button" className="btn-cancel" onClick={resetForm}>
+                                                            Cancelar
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <div className="links-section">
+                                            <div className="card-header">
+                                                <h3>Tus Accesos ({links.length})</h3>
+                                                <p>Lista de todos los comandos y sitios guardados.</p>
+                                            </div>
+                                            <div className="links-list-modern">
+                                                {links.map((link) => (
+                                                    <div key={link.id} className="link-card-modern">
+                                                        <div className="link-card-info">
+                                                            <div className="link-card-name">{link.name}</div>
+                                                            <div className="link-card-url">{link.url}</div>
+                                                        </div>
+                                                        <div className="link-card-actions">
+                                                            <button className="btn-action edit" onClick={() => handleEdit(link)}>✎</button>
+                                                            <button className="btn-action delete" onClick={() => handleDelete(link.id)}>🗑</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {links.length === 0 && (
+                                                    <div className="empty-state-modern">
+                                                        <div className="empty-icon">📂</div>
+                                                        <p>No tienes links guardados todavía.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'settings' && (
+                                <div className="section-settings">
+                                    <h1>Configuración General</h1>
+                                    <div className="settings-card">
+                                        <p>Próximamente: Personalización de colores, atajos de teclado y más.</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
