@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize } from "../wailsjs/go/main/App";
+import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, GetSettingBackend, UpdateSettingBackend, QuitApp } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
 
 function App() {
@@ -10,6 +10,7 @@ function App() {
     const [editingLink, setEditingLink] = useState<main.Link | null>(null);
     const [searchResults, setSearchResults] = useState<main.Link[]>([]);
     const [activeTab, setActiveTab] = useState('links');
+    const [runInBackground, setRunInBackground] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Form state
@@ -21,6 +22,11 @@ function App() {
     });
 
     useEffect(() => {
+        // Cargar configuraciones
+        GetSettingBackend("run_in_background").then(val => {
+            setRunInBackground(val === "true");
+        });
+
         if (inputRef.current && !showAdmin) {
             inputRef.current.focus();
         }
@@ -133,6 +139,17 @@ function App() {
         setEditingLink(null);
     };
 
+    const toggleBackground = async (checked: boolean) => {
+        setRunInBackground(checked);
+        await UpdateSettingBackend("run_in_background", checked ? "true" : "false");
+    };
+
+    const handleQuit = () => {
+        if (confirm('¿Estás seguro de que quieres cerrar Vallet Launcher por completo?')) {
+            QuitApp();
+        }
+    };
+
     if (showAdmin) {
         return (
             <div className="container admin-container">
@@ -180,11 +197,7 @@ function App() {
                     {/* Área de Contenido */}
                     <div className="admin-main">
                         <header className="main-header">
-                            <div className="header-search-container">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                                <input type="text" placeholder="Buscar en Vallet OS..." />
-                                <span className="search-hint">⌘ 1</span>
-                            </div>
+                            <div></div>
                             <div className="header-actions">
                                 <button className="header-icon-btn">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
@@ -361,9 +374,39 @@ function App() {
 
                             {activeTab === 'settings' && (
                                 <div className="section-settings">
-                                    <h1>Configuración General</h1>
-                                    <div className="settings-card">
-                                        <p>Próximamente: Personalización de colores, atajos de teclado y más.</p>
+                                    <header className="dashboard-content-header">
+                                        <h1>Configuración</h1>
+                                        <p>Personaliza el comportamiento de Vallet Launcher.</p>
+                                    </header>
+
+                                    <div className="settings-group">
+                                        <div className="settings-item">
+                                            <div className="settings-info">
+                                                <span>Ejecutar en segundo plano</span>
+                                                <p>La aplicación seguirá ejecutándose al cerrar la ventana.</p>
+                                            </div>
+                                            <label className="switch">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={runInBackground}
+                                                    onChange={(e) => toggleBackground(e.target.checked)}
+                                                />
+                                                <span className="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="danger-zone">
+                                        <h2>Zona de Peligro</h2>
+                                        <div className="settings-item" style={{ border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                            <div className="settings-info">
+                                                <span>Cerrar Aplicación</span>
+                                                <p>Detiene el proceso de Vallet Launcher por completo.</p>
+                                            </div>
+                                            <button className="btn-danger-outline" onClick={handleQuit}>
+                                                Cerrar Todo
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}

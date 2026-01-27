@@ -40,6 +40,12 @@ func (a *App) domReady(ctx context.Context) {
 
 // beforeClose is called when the application is about to quit
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
+	bg, _ := a.GetSettingBackend("run_in_background")
+	if bg == "true" {
+		wailsruntime.WindowHide(a.ctx)
+		return true // Prevent closing
+	}
+
 	if a.db != nil {
 		a.db.Close()
 	}
@@ -141,4 +147,22 @@ func (a *App) UpdateLink(link Link) error {
 // DeleteLink deletes a link by ID
 func (a *App) DeleteLink(id int) error {
 	return a.db.DeleteLink(id)
+}
+
+// GetSettingBackend gets a setting value
+func (a *App) GetSettingBackend(key string) (string, error) {
+	return a.db.GetSetting(key)
+}
+
+// UpdateSettingBackend updates a setting value
+func (a *App) UpdateSettingBackend(key, value string) error {
+	return a.db.UpdateSetting(key, value)
+}
+
+// QuitApp closes the application completely
+func (a *App) QuitApp() {
+	// We set the setting to false temporarily or just use runtime.Quit
+	// but to bypass beforeClose we can just exit the process or clear the setting
+	// Better way: Wails provides runtime.Quit which triggers OnShutdown but we can force it
+	wailsruntime.Quit(a.ctx)
 }

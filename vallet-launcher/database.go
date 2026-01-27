@@ -49,17 +49,44 @@ func NewDatabase() (*Database, error) {
 }
 
 func (d *Database) createTables() error {
-	query := `
-	CREATE TABLE IF NOT EXISTS links (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		url TEXT NOT NULL,
-		description TEXT,
-		category TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	`
-	_, err := d.db.Exec(query)
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS links (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			url TEXT NOT NULL,
+			description TEXT,
+			category TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS settings (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		);`,
+	}
+
+	for _, query := range queries {
+		if _, err := d.db.Exec(query); err != nil {
+			return err
+		}
+	}
+
+	// Insert default settings if not exist
+	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('run_in_background', 'false')")
+
+	return nil
+}
+
+func (d *Database) GetSetting(key string) (string, error) {
+	var value string
+	err := d.db.QueryRow("SELECT value FROM settings WHERE key = ?", key).Scan(&value)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return value, err
+}
+
+func (d *Database) UpdateSetting(key, value string) error {
+	_, err := d.db.Exec("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, value)
 	return err
 }
 
