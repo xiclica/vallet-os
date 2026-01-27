@@ -100,9 +100,8 @@ func (a *App) ShowWindow() {
 	wailsruntime.WindowShow(a.ctx)
 }
 
-// SetAdminSize resizes the window for admin mode
 func (a *App) SetAdminSize() {
-	wailsruntime.WindowSetSize(a.ctx, 1000, 700)
+	wailsruntime.WindowSetSize(a.ctx, 1200, 650)
 	wailsruntime.WindowCenter(a.ctx)
 }
 

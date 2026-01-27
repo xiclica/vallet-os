@@ -166,6 +166,7 @@ function App() {
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
                                 Ajustes
                             </button>
+
                         </nav>
 
                         <div className="sidebar-footer">
@@ -179,8 +180,15 @@ function App() {
                     {/* Área de Contenido */}
                     <div className="admin-main">
                         <header className="main-header">
-                            <div className="breadcrumb">Configuración / {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</div>
+                            <div className="header-search-container">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                                <input type="text" placeholder="Buscar en Vallet OS..." />
+                                <span className="search-hint">⌘ 1</span>
+                            </div>
                             <div className="header-actions">
+                                <button className="header-icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+                                </button>
                                 <button className="close-btn-round" onClick={() => { setShowAdmin(false); SetLauncherSize(); }}>✕</button>
                             </div>
                         </header>
@@ -188,15 +196,81 @@ function App() {
                         <div className="main-content-scroll">
                             {activeTab === 'dashboard' && (
                                 <div className="section-dashboard">
-                                    <h1>Resumen</h1>
-                                    <div className="stats-grid">
-                                        <div className="stat-card">
-                                            <div className="stat-value">{links.length}</div>
-                                            <div className="stat-label">Links Guardados</div>
+                                    <header className="dashboard-content-header">
+                                        <h1>Dashboard</h1>
+                                        <p>Resumen general de tus accesos y productividad.</p>
+                                    </header>
+
+                                    <div className="stats-grid-dashboard">
+                                        <div className="stat-card-new">
+                                            <div className="stat-card-icon purple">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                                            </div>
+                                            <div className="stat-card-info">
+                                                <span className="stat-label">Total Links</span>
+                                                <div className="stat-row">
+                                                    <span className="stat-value">{links.length}</span>
+                                                    <span className="stat-trend positive">↑ 12%</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="stat-card">
-                                            <div className="stat-value">Activo</div>
-                                            <div className="stat-label">Estado del Sistema</div>
+
+                                        <div className="stat-card-new">
+                                            <div className="stat-card-icon green">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                                            </div>
+                                            <div className="stat-card-info">
+                                                <span className="stat-label">Activos</span>
+                                                <div className="stat-row">
+                                                    <span className="stat-value">{links.length}</span>
+                                                    <span className="stat-trend positive">↑ 5%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="stat-card-new">
+                                            <div className="stat-card-icon blue">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                            </div>
+                                            <div className="stat-card-info">
+                                                <span className="stat-label">Recientes</span>
+                                                <div className="stat-row">
+                                                    <span className="stat-value">24</span>
+                                                    <span className="stat-trend text-secondary">Últimos 7 días</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="dashboard-charts-row">
+                                        <div className="chart-placeholder-card">
+                                            <div className="card-header-small">
+                                                <h4>Actividad de Uso</h4>
+                                                <div className="badge-new">Semanal</div>
+                                            </div>
+                                            <div className="fake-chart">
+                                                {/* Representación visual de un gráfico tipo el de la imagen */}
+                                                <div className="chart-line-bg"></div>
+                                                <div className="chart-bars">
+                                                    {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                                                        <div key={i} className="chart-bar" style={{ height: `${h}%` }}></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="status-overview-card">
+                                            <h4>Estado del Sistema</h4>
+                                            <div className="status-rings">
+                                                <div className="status-ring-item">
+                                                    <div className="ring purple">60%</div>
+                                                    <span>Base de Datos</span>
+                                                </div>
+                                                <div className="status-ring-item">
+                                                    <div className="ring green">92%</div>
+                                                    <span>Memoria</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -204,81 +278,83 @@ function App() {
 
                             {activeTab === 'links' && (
                                 <div className="section-links">
-                                    <div className="admin-content-grid">
-                                        <div className="form-section">
-                                            <div className="card-header">
-                                                <h3>{editingLink ? 'Editar Link' : 'Nuevo Link'}</h3>
-                                                <p>Completa la información para guardar un nuevo acceso directo.</p>
-                                            </div>
-                                            <form onSubmit={handleSubmitLink} className="modern-form">
-                                                <div className="form-group">
-                                                    <label>Nombre del sitio</label>
+                                    <div className="admin-header-inline">
+                                        <div className="card-header">
+                                            <h3>{editingLink ? 'Editar Link' : 'Nuevo Link'}</h3>
+                                            <p>Agrega o modifica tus accesos directos.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-container-top">
+                                        <form onSubmit={handleSubmitLink} className="modern-form-inline">
+                                            <div className="form-row">
+                                                <div className="form-group flex-2">
+                                                    <label>Alias</label>
                                                     <input
                                                         type="text"
                                                         value={formData.name}
                                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                                         required
-                                                        placeholder="Ej: Workspace Principal"
+                                                        placeholder="Ej: Workspace"
                                                     />
                                                 </div>
-                                                <div className="form-group">
+                                                <div className="form-group flex-3">
                                                     <label>URL o Comando</label>
                                                     <input
                                                         type="text"
                                                         value={formData.url}
                                                         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                                                         required
-                                                        placeholder="https://... o comando de app"
+                                                        placeholder="https://... o comando"
                                                     />
                                                 </div>
-                                                <div className="form-group">
-                                                    <label>Descripción (Opcional)</label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.description}
-                                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                        placeholder="Breve descripción..."
-                                                    />
-                                                </div>
-                                                <div className="form-actions">
+                                                <div className="form-actions-inline">
                                                     <button type="submit" className="btn-save">
-                                                        {editingLink ? 'Guardar Cambios' : 'Crear Link'}
+                                                        {editingLink ? 'Actualizar' : 'Agregar'}
                                                     </button>
                                                     {editingLink && (
                                                         <button type="button" className="btn-cancel" onClick={resetForm}>
-                                                            Cancelar
+                                                            ✕
                                                         </button>
                                                     )}
                                                 </div>
-                                            </form>
-                                        </div>
+                                            </div>
+                                        </form>
+                                    </div>
 
-                                        <div className="links-section">
-                                            <div className="card-header">
-                                                <h3>Tus Accesos ({links.length})</h3>
-                                                <p>Lista de todos los comandos y sitios guardados.</p>
-                                            </div>
-                                            <div className="links-list-modern">
+                                    <div className="table-container-macos">
+                                        <table className="macos-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Alias</th>
+                                                    <th>URL / Comando</th>
+                                                    <th className="actions-column">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
                                                 {links.map((link) => (
-                                                    <div key={link.id} className="link-card-modern">
-                                                        <div className="link-card-info">
-                                                            <div className="link-card-name">{link.name}</div>
-                                                            <div className="link-card-url">{link.url}</div>
-                                                        </div>
-                                                        <div className="link-card-actions">
-                                                            <button className="btn-action edit" onClick={() => handleEdit(link)}>✎</button>
-                                                            <button className="btn-action delete" onClick={() => handleDelete(link.id)}>🗑</button>
-                                                        </div>
-                                                    </div>
+                                                    <tr key={link.id}>
+                                                        <td className="font-semibold">{link.name}</td>
+                                                        <td className="text-accent">{link.url}</td>
+                                                        <td className="actions-cell">
+                                                            <div className="table-actions">
+                                                                <button className="btn-table-action edit" onClick={() => handleEdit(link)} title="Editar">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                                                </button>
+                                                                <button className="btn-table-action delete" onClick={() => handleDelete(link.id)} title="Eliminar">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
                                                 ))}
-                                                {links.length === 0 && (
-                                                    <div className="empty-state-modern">
-                                                        <div className="empty-icon">📂</div>
-                                                        <p>No tienes links guardados todavía.</p>
-                                                    </div>
-                                                )}
+                                            </tbody>
+                                        </table>
+                                        {links.length === 0 && (
+                                            <div className="empty-table-state">
+                                                <p>No hay links registrados</p>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -294,7 +370,7 @@ function App() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         );
     }
 
