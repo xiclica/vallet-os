@@ -349,6 +349,12 @@ input::placeholder {
   z-index: 10;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .breadcrumb {
   font-size: 13px;
   color: var(--text-secondary);
@@ -356,8 +362,8 @@ input::placeholder {
 }
 
 .close-btn-round {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
   background: #f0f0f5;
@@ -366,11 +372,14 @@ input::placeholder {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .close-btn-round:hover {
-  background: #e5e5ea;
-  transform: scale(1.1);
+  background: #fee2e2;
+  color: #ef4444;
+  transform: scale(1.05) translateY(-1px);
 }
 
 .main-content-scroll {
@@ -626,18 +635,23 @@ input::placeholder {
 }
 
 .header-icon-btn {
-  background: transparent;
+  background: #f1f5f9;
   border: none;
-  padding: 10px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
   color: #64748b;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-icon-btn:hover {
-  background: #f1f5f9;
+  background: #eef2ff;
   color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .header-icon-btn svg {

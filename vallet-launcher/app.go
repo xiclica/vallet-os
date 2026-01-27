@@ -31,6 +31,9 @@ func (a *App) startup(ctx context.Context) {
 		log.Fatal("Error initializing database:", err)
 	}
 	a.db = db
+
+	// Configurar atajos de teclado globales
+	a.setupHotkeys(ctx)
 }
 
 // domReady is called after front-end resources have been loaded
