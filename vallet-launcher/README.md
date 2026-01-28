@@ -2,25 +2,44 @@
 
 Una aplicación de escritorio tipo Alfred/Spotlight construida con Wails (Go + React + TypeScript) para Windows, con gestión de links mediante SQLite.
 
-## 🎯 Características
+## 🚀 Funcionalidades Actuales
 
-- **Interfaz Premium**: Diseño glassmorphism con efectos de blur estilo macOS
-- **Siempre Accesible**: Ventana sin bordes, siempre al frente, transparente
-- **Base de Datos SQLite**: Persistencia de links favoritos
-- **Búsqueda Inteligente**: 
-  - Busca en tus links guardados
-  - Escribe una URL (ej: `google.com`, `https://github.com`) para abrir en el navegador
-  - Escribe el nombre de una aplicación (ej: `calc`, `notepad`) para ejecutarla
-- **Panel de Administración CRUD**:
-  - Crear, editar y eliminar links
-  - Organizar por categorías
-  - Agregar descripciones
-- **Sugerencias en Tiempo Real**: Muestra links guardados mientras escribes
-- **Atajos de Teclado**:
-  - `Enter`: Ejecutar búsqueda/abrir
-  - `Esc`: Ocultar ventana (o cerrar panel admin)
-  - Click en "⚙ Admin": Abrir panel de administración
+-   **Buscador Inteligente (`Ctrl + Shift + Space`)**: Acceso instantáneo a un buscador tipo Spotlight/Alfred.
+    -   Abre URLs directamente (ej. `google.com`).
+    -   Lanzar aplicaciones del sistema (ej. `notepad`, `calc`). (pendiente)
+    -   Busca en tu base de datos de links personalizados.
+-   **Transcripción de Voz a Texto (`Ctrl + Alt + Space`)**: usando un modelo local small de whisper genera transcripciones rapidas (en mi caso usando GPU).
+    -   Graba audio y lo transcribe localmente con alta precisión.
+    -   **Auto-Paste**: El texto transcrito se pega automáticamente en la aplicación que tengas abierta y tenga el focus input en ese momento.
+-   **Gestión de Links (Panel Admin)**: CRUD completo para guardar tus sitios y comandos frecuentes.
+-   **Interfaz Premium**: Diseño moderno con efectos de desenfoque (glassmorphism), animaciones suaves y modo siempre al frente.
+-   **Base de Datos Local**: Todo se guarda de forma segura en una base de datos SQLite local.
 
+## 🎙️ Configuración de Whisper (Tutorial)
+
+Para habilitar la transcripción de voz, debes configurar los archivos necesarios manualmente:
+
+1.  **Crear Carpeta**: En la raíz del proyecto, asegúrate de que existe una carpeta llamada `whisper/`.
+
+2.  **Descargar CLI**: Descarga el binario `whisper-cli.exe` adecuado para tu sistema (se recomienda la versión con soporte para GPU/CUDA si tienes una tarjeta NVIDIA).
+
+[Descargar el cli de tu sistema operativo ](https://github.com/ggml-org/whisper.cpp/releases)
+
+3.  **Descargar Modelo**: Descarga el archivo del modelo `ggml-small.bin`. El modelo **small** ha demostrado ser el equilibrio perfecto entre velocidad y precisión.
+
+[Repositorio de whisper.cpp que esta obtimizado para go ](https://github.com/ggml-org/whisper.cpp)
+
+4.  **Ubicación de Archivos**: Coloca ambos archivos dentro de la carpeta `whisper/`.
+
+La estructura debería verse así:
+```text
+vallet-launcher/
+└── whisper/
+    ├── whisper-cli.exe
+    └── ggml-small.bin
+```
+
+> **Nota**: Asegúrate de que el ejecutable se llame exactamente `whisper-cli.exe` y el modelo `ggml-small.bin`.
 ## 🏗️ Estructura del Proyecto
 
 ```
@@ -108,38 +127,34 @@ La aplicación utiliza:
 - `UpdateLink(link Link)`: Actualiza un link existente
 - `DeleteLink(id int)`: Elimina un link
 
-## 💡 Uso
+## 💡 Uso y Atajos
+
+### Atajos Globales (En cualquier momento)
+- **`Ctrl + Shift + Espacio`**: Abre/Muestra el buscador de Vallet Launcher.
+- **`Ctrl + Alt + Espacio`**: Activa/Desactiva la grabación de voz (Whisper). Al terminar, el texto se pegará donde esté el cursor.
+
+### Dentro de la Aplicación
+- **`Enter`**: Ejecutar búsqueda, abrir URL o lanzar app.
+- **`Esc`**: Ocultar la ventana o cerrar el panel de administración.
+- **Click en "⚙ Admin"**: Abrir el gestor de links.
 
 ### Búsqueda Rápida
-1. Abre la aplicación
-2. Escribe el nombre de un link guardado, una URL o una aplicación
-3. Presiona `Enter` para abrir
-4. La ventana se ocultará automáticamente
+1. Presiona `Ctrl + Shift + Espacio`.
+2. Escribe el nombre de un link guardado, una URL o una aplicación.
+3. Presiona `Enter` para abrir.
 
 ### Administrar Links
-1. Click en "⚙ Admin" en la barra de búsqueda
-2. Completa el formulario con:
-   - **Nombre**: Nombre corto para buscar (ej: "Gmail")
-   - **URL**: Dirección completa (ej: "https://mail.google.com")
-   - **Descripción**: Opcional, para recordar qué es
-   - **Categoría**: Opcional, para organizar (ej: "Trabajo", "Personal")
-3. Click en "Crear" para guardar
-4. Los links aparecen en la lista de la derecha
-5. Usa los botones ✎ (editar) o 🗑 (eliminar) para gestionar
-
-### Búsqueda con Sugerencias
-1. Empieza a escribir en el buscador
-2. Verás sugerencias de links guardados que coincidan
-3. Click en una sugerencia para abrirla directamente
+1. Entra al panel de "⚙ Admin".
+2. Gestiona tus links (Crear, Editar, Eliminar).
+3. Aparecerán instantáneamente como sugerencias mientras escribes en el buscador principal.
 
 ## 🎯 Próximas Mejoras
 
-- [ ] Agregar sistema de bandeja (tray icon) con hotkey global
-- [ ] Importar/Exportar links
-- [ ] Estadísticas de uso
-- [ ] Temas personalizables (claro/oscuro)
-- [ ] Soporte para iconos personalizados
-- [ ] Sincronización en la nube
+- [ ] Importar/Exportar links.
+- [ ] Estadísticas de uso.
+- [ ] Temas personalizables (claro/oscuro).
+- [ ] Soporte para iconos personalizados.
+- [ ] Sincronización en la nube.
 
 ## 📄 Licencia
 

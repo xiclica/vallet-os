@@ -2,6 +2,7 @@
 build/bin
 build/windows
 
+/whisper
 # Frontend
 node_modules
 frontend/dist

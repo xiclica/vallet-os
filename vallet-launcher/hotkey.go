@@ -49,21 +49,42 @@ func (a *App) setupHotkeys(ctx context.Context) {
 
 	// Se lanza en una goroutine para no bloquear el hilo principal de la UI.
 	go func() {
+		// Importante: Bloquear esta goroutine a un hilo del SO para RegisterHotKey / GetMessage.
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
 		// ID 1: Atajo para mostrar el Launcher (Ctrl + Shift + Espacio).
 		hotkeyID_Launcher := 1
-		reghotkey.Call(0, uintptr(hotkeyID_Launcher), MOD_CONTROL|MOD_SHIFT, VK_SPACE)
+		ok1, _, err1 := reghotkey.Call(0, uintptr(hotkeyID_Launcher), MOD_CONTROL|MOD_SHIFT, VK_SPACE)
+		if ok1 == 0 {
+			fmt.Printf("❌ Error registrando Hotkey Launcher (Ctrl+Shift+Space): %v\n", err1)
+		} else {
+			fmt.Println("✅ Hotkey Launcher registrado (Ctrl+Shift+Space)")
+		}
 		defer unreghotkey.Call(0, uintptr(hotkeyID_Launcher))
 
 		// ID 2: Atajo para activar grabación por voz Whisper (Ctrl + Alt + Espacio).
 		hotkeyID_Whisper := 2
-		reghotkey.Call(0, uintptr(hotkeyID_Whisper), MOD_CONTROL|MOD_ALT, VK_SPACE)
+		ok2, _, err2 := reghotkey.Call(0, uintptr(hotkeyID_Whisper), MOD_CONTROL|MOD_ALT, VK_SPACE)
+		if ok2 == 0 {
+			fmt.Printf("❌ Error registrando Hotkey Whisper (Ctrl+Alt+Space): %v\n", err2)
+		} else {
+			fmt.Println("✅ Hotkey Whisper registrado (Ctrl+Alt+Space)")
+		}
 		defer unreghotkey.Call(0, uintptr(hotkeyID_Whisper))
+
+		fmt.Println("🎹 Bucle de mensajes de Windows para hotkeys iniciado.")
 
 		var msg MSG
 		for {
 			// Escucha de mensajes del sistema de Windows.
 			ret, _, _ := getmessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
-			if int32(ret) <= 0 {
+			if int32(ret) == 0 {
+				fmt.Println("ℹ️ Bucle de hotkeys finalizado por WM_QUIT.")
+				break
+			}
+			if int32(ret) < 0 {
+				fmt.Printf("❌ Error en GetMessage (bucle hotkeys): %v\n", ret)
 				break
 			}
 
@@ -90,5 +111,6 @@ func (a *App) setupHotkeys(ctx context.Context) {
 				}
 			}
 		}
+		fmt.Println("⚠️ Goroutine de hotkeys terminada.")
 	}()
 }
