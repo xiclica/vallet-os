@@ -17,21 +17,17 @@ Una aplicación de escritorio tipo Alfred/Spotlight construida con Wails (Go + R
 
 ## 🎙️ Configuración de Whisper (Tutorial)
 
-Para habilitar la transcripción de voz, debes configurar los archivos necesarios manualmente:
+Para habilitar la transcripción de voz local, sigue estos pasos:
 
 1.  **Crear Carpeta**: En la raíz del proyecto, asegúrate de que existe una carpeta llamada `whisper/`.
-
-2.  **Descargar CLI**: Descarga el binario `whisper-cli.exe` adecuado para tu sistema (se recomienda la versión con soporte para GPU/CUDA si tienes una tarjeta NVIDIA).
-
-[Descargar el cli de tu sistema operativo ](https://github.com/ggml-org/whisper.cpp/releases)
-
-3.  **Descargar Modelo**: Descarga el archivo del modelo `ggml-small.bin`. El modelo **small** ha demostrado ser el equilibrio perfecto entre velocidad y precisión.
-
-[Repositorio de whisper.cpp que esta obtimizado para go ](https://github.com/ggml-org/whisper.cpp)
-
+2.  **Descargar CLI**: Descarga el binario `whisper-cli.exe` **adecuado para tu PC** [aquí](https://github.com/ggml-org/whisper.cpp/releases).
+    -   Si tienes una tarjeta NVIDIA, busca las versiones con **CUDA** para mayor velocidad.
+    -   Si no, usa la versión estándar para CPU.
+3.  **Descargar Modelo**: Descarga el archivo del modelo `ggml-small.bin`. Hemos probado varios y el modelo **small** es el que mejor funciona, ofreciendo un equilibrio perfecto entre velocidad y precisión.
+    -   [Descargar modelo small](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
 4.  **Ubicación de Archivos**: Coloca ambos archivos dentro de la carpeta `whisper/`.
 
-La estructura debería verse así:
+La estructura final debe ser:
 ```text
 vallet-launcher/
 └── whisper/
@@ -39,7 +35,8 @@ vallet-launcher/
     └── ggml-small.bin
 ```
 
-> **Nota**: Asegúrate de que el ejecutable se llame exactamente `whisper-cli.exe` y el modelo `ggml-small.bin`.
+> **Nota**: El sistema busca exactamente esos nombres de archivo para funcionar.
+
 ## 🏗️ Estructura del Proyecto
 
 ```
