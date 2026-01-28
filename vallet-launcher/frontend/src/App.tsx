@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, GetSettingBackend, UpdateSettingBackend, QuitApp } from "../wailsjs/go/main/App";
+import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
 import { EventsOn } from "../wailsjs/runtime/runtime";
 
@@ -15,7 +15,118 @@ function App() {
     const [defaultBrowser, setDefaultBrowser] = useState('system');
     const [saveProgress, setSaveProgress] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Recording logic ref
+    const recordingRef = useRef<{
+        stream: MediaStream | null;
+        processor: ScriptProcessorNode | null;
+        context: AudioContext | null;
+        chunks: Int16Array[];
+    }>({ stream: null, processor: null, context: null, chunks: [] });
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const context = new AudioContext({ sampleRate: 16000 });
+            const source = context.createMediaStreamSource(stream);
+            // We use a small buffer for performance
+            const processor = context.createScriptProcessor(4096, 1, 1);
+
+            const chunks: Int16Array[] = [];
+
+            processor.onaudioprocess = (e) => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                const int16Data = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                chunks.push(int16Data);
+            };
+
+            source.connect(processor);
+            processor.connect(context.destination);
+
+            recordingRef.current = { stream, processor, context, chunks };
+            setIsRecording(true);
+        } catch (err) {
+            console.error("Error starting recording:", err);
+        }
+    };
+
+    const stopRecording = () => {
+        const { stream, processor, context, chunks } = recordingRef.current;
+        setIsRecording(false);
+        if (!context || !processor || !stream) return;
+
+        processor.disconnect();
+        stream.getTracks().forEach(track => track.stop());
+        context.close();
+
+        // Encode and send
+        if (chunks.length > 0) {
+            const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+            const pcmData = new Int16Array(totalLength);
+            let offset = 0;
+            for (const chunk of chunks) {
+                pcmData.set(chunk, offset);
+                offset += chunk.length;
+            }
+
+            const wavBuffer = encodeWAV(pcmData, 16000);
+            // Convert to base64
+            const uint8 = new Uint8Array(wavBuffer);
+            let binary = '';
+            for (let i = 0; i < uint8.byteLength; i++) {
+                binary += String.fromCharCode(uint8[i]);
+            }
+            const base64 = btoa(binary);
+            ProcessAudio(base64);
+        }
+    };
+
+    const encodeWAV = (samples: Int16Array, sampleRate: number) => {
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+
+        const writeString = (offset: number, string: string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 32 + samples.length * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 1, true); // Mono
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true); // Block align
+        view.setUint16(34, 16, true); // Bits per sample
+        writeString(36, 'data');
+        view.setUint32(40, samples.length * 2, true);
+
+        let offset = 44;
+        for (let i = 0; i < samples.length; i++, offset += 2) {
+            view.setInt16(offset, samples[i], true);
+        }
+
+        return buffer;
+    };
+
+    useEffect(() => {
+        const unsubsStart = EventsOn("start-recording", startRecording);
+        const unsubsStop = EventsOn("stop-recording", stopRecording);
+        return () => {
+            unsubsStart();
+            unsubsStop();
+        };
+    }, []);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -534,11 +645,22 @@ function App() {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Buscar aplicación o sitio web..."
+                                placeholder={isRecording ? "Grabando... (vuelve a presionar el atajo para parar)" : "Buscar aplicación o sitio web..."}
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 autoFocus
                             />
+                            {isRecording && (
+                                <div className="recording-indicator">
+                                    <div className="recording-dot"></div>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff4444" strokeWidth="2" style={{ width: '20px' }}>
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                        <line x1="12" y1="19" x2="12" y2="23" />
+                                        <line x1="8" y1="23" x2="16" y2="23" />
+                                    </svg>
+                                </div>
+                            )}
                         </div>
                     </form>
 

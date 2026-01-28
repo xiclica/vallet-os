@@ -2,13 +2,64 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
+	"vallet-launcher/ai"
+	"vallet-launcher/utils"
+
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+// ProcessAudio receives audio from frontend, transcribes it and pastes it
+func (a *App) ProcessAudio(base64Data string) {
+	fmt.Println("🎙️ Procesando audio recibido...")
+
+	// 1. Decode base64
+	data, err := base64.StdEncoding.DecodeString(base64Data)
+	if err != nil {
+		log.Printf("Error decoding audio: %v", err)
+		return
+	}
+
+	// 2. Save to temp file
+	tempFile := filepath.Join(os.TempDir(), "vallet_voice.wav")
+	err = os.WriteFile(tempFile, data, 0644)
+	if err != nil {
+		log.Printf("Error saving temp audio: %v", err)
+		return
+	}
+
+	// 3. Transcribe with Whisper
+	whisper, err := ai.NewWhisperClient()
+	if err != nil {
+		log.Printf("Error initializing Whisper: %v", err)
+		return
+	}
+
+	text, err := whisper.Transcribe(tempFile)
+	if err != nil {
+		log.Printf("Transcription error: %v", err)
+		return
+	}
+
+	if text != "" {
+		fmt.Printf("📝 Transcripción: %s\n", text)
+		// 4. Paste text
+		err = utils.PasteText(text)
+		if err != nil {
+			log.Printf("Error pasting text: %v", err)
+		}
+	} else {
+		fmt.Println("⚠️ No se detectó texto en el audio.")
+	}
+}
 
 // App struct
 type App struct {

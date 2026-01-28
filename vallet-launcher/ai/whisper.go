@@ -36,7 +36,7 @@ func NewWhisperClient() (*WhisperClient, error) {
 		cwd,
 		filepath.Join(cwd, "ai"),
 		filepath.Join(exeDir, "ai"),
-		filepath.Join(cwd, "whisper", "whisper-bin-x64", "Release"),
+		filepath.Join(cwd, "whisper", "whisper-cublas-12.4.0-bin-x64", "Release"),
 	}
 
 	possibleModelDirs := []string{
@@ -83,7 +83,6 @@ func NewWhisperClient() (*WhisperClient, error) {
 func (w *WhisperClient) Transcribe(wavPath string) (string, error) {
 	// Check if files exist
 	if _, err := os.Stat(w.binaryPath); os.IsNotExist(err) {
-		// Try to look up in path
 		if p, err := exec.LookPath(w.binaryPath); err == nil {
 			w.binaryPath = p
 		} else {
@@ -95,9 +94,11 @@ func (w *WhisperClient) Transcribe(wavPath string) (string, error) {
 	}
 
 	// Command: whisper-cli -m model -f file -nt -l auto
-	// -nt: no timestamps
-	// -l auto: auto detect language (or specify if needed)
-	cmd := exec.Command(w.binaryPath, "-m", w.modelPath, "-f", wavPath, "-nt", "-l", "auto")
+	// -t 8: Hilos de CPU (para gestión)
+	// -bs 1: Beam size 1 (Mucho más rápido)
+	// -bo 1: Best of 1 (Vital para velocidad)
+	// --max-len 0: Sin límite de longitud de segmento
+	cmd := exec.Command(w.binaryPath, "-m", w.modelPath, "-f", wavPath, "-nt", "-l", "auto", "-t", "8", "-bs", "1", "-bo", "1")
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -105,6 +106,12 @@ func (w *WhisperClient) Transcribe(wavPath string) (string, error) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+
+	// Imprimimos el stderr siempre para ver si usa GPU (CUDA = 1, etc)
+	fmt.Println("--- Whisper System Info ---")
+	fmt.Println(stderr.String())
+	fmt.Println("---------------------------")
+
 	if err != nil {
 		return "", fmt.Errorf("whisper execution failed: %v, stderr: %s", err, stderr.String())
 	}

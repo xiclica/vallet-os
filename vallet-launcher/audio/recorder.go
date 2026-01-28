@@ -21,45 +21,38 @@ type Recorder struct {
 
 func NewRecorder() (*Recorder, error) {
 	return &Recorder{
-		alias: "vallet_rec",
+		alias: "vrec",
 	}, nil
 }
 
 func (r *Recorder) Start(filename string) error {
 	r.filePath = filename
 
-	// Ensure clean state
-	r.mci("close " + r.alias)
+	// Ensure clean state (ignore error)
+	_ = r.mci("close " + r.alias)
 
 	// Open new recording session
-	// Some systems prefer 'open new type waveaudio alias aliasname'
-	// Others might work with just 'open new alias aliasname'
+	// Try a very basic open command
 	if err := r.mci("open new type waveaudio alias " + r.alias); err != nil {
 		return fmt.Errorf("failed to open mci device: %v", err)
 	}
 
-	// Configure for Whisper (16kHz, 16-bit, Mono)
-	// We'll try to set these, but we won't fail if some aren't supported by the driver immediately
-	cmds := []string{
-		"set " + r.alias + " time format ms",
-		"set " + r.alias + " bitspersample 16",
-		"set " + r.alias + " channels 1",
-		"set " + r.alias + " samplespersec 16000",
-		"set " + r.alias + " bytespersec 32000",
-		"set " + r.alias + " alignment 2",
-	}
-
-	for _, cmd := range cmds {
-		if err := r.mci(cmd); err != nil {
-			log.Printf("MCI [%s] Warning: %v", cmd, err)
-		}
-	}
+	// Basic configuration
+	// Note: some systems fail if you set these too fast or if hardware doesn't support it.
+	// We'll try to set them but prioritize starting the recording.
+	_ = r.mci("set " + r.alias + " time format ms")
+	_ = r.mci("set " + r.alias + " bitspersample 16")
+	_ = r.mci("set " + r.alias + " channels 1")
+	_ = r.mci("set " + r.alias + " samplespersec 16000")
+	_ = r.mci("set " + r.alias + " bytespersec 32000")
+	_ = r.mci("set " + r.alias + " alignment 2")
 
 	// Start recording
 	if err := r.mci("record " + r.alias); err != nil {
 		return fmt.Errorf("failed to start recording: %v", err)
 	}
 
+	log.Printf("Recording started on alias %s", r.alias)
 	return nil
 }
 
