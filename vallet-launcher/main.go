@@ -28,8 +28,8 @@ func main() {
 	// Configuración y ejecución de Wails.
 	err := wails.Run(&options.App{
 		Title:            "Vallet Launcher",
-		Width:            660,
-		Height:           120,
+		Width:            720,
+		Height:           150,
 		Frameless:        true,                                  // Sin marcos de ventana estándar.
 		AlwaysOnTop:      true,                                  // Siempre por encima de otras ventanas.
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0}, // Fondo transparente.

@@ -199,16 +199,20 @@ func (a *App) ShowWindow() {
 
 // SetAdminSize ajusta el tamaño de la ventana para el panel de administración.
 func (a *App) SetAdminSize() {
-	wailsruntime.WindowSetSize(a.ctx, 1200, 650)
-	wailsruntime.WindowCenter(a.ctx)
+	if runtime.GOOS == "windows" {
+		utils.CenterWindowNoActivate("Vallet Launcher", 1280, 900)
+	} else {
+		wailsruntime.WindowSetSize(a.ctx, 1280, 800)
+		wailsruntime.WindowCenter(a.ctx)
+	}
 }
 
 // SetLauncherSize ajusta el tamaño de la ventana al modo buscador minimalista.
 func (a *App) SetLauncherSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 660, 120)
+		utils.CenterWindowNoActivate("Vallet Launcher", 720, 150)
 	} else {
-		wailsruntime.WindowSetSize(a.ctx, 660, 120)
+		wailsruntime.WindowSetSize(a.ctx, 720, 150)
 		wailsruntime.WindowCenter(a.ctx)
 	}
 }
@@ -216,9 +220,9 @@ func (a *App) SetLauncherSize() {
 // SetLauncherExpandedSize expande la ventana para mostrar sugerencias de búsqueda.
 func (a *App) SetLauncherExpandedSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 660, 480)
+		utils.CenterWindowNoActivate("Vallet Launcher", 720, 480)
 	} else {
-		wailsruntime.WindowSetSize(a.ctx, 660, 480)
+		wailsruntime.WindowSetSize(a.ctx, 720, 480)
 		wailsruntime.WindowCenter(a.ctx)
 	}
 }
