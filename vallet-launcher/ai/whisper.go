@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -34,6 +36,8 @@ func NewWhisperClient() (*WhisperClient, error) {
 	possibleBinaryDirs := []string{
 		exeDir,
 		cwd,
+		filepath.Join(exeDir, "resources"),
+		filepath.Join(cwd, "resources"),
 		filepath.Join(cwd, "ai"),
 		filepath.Join(exeDir, "ai"),
 		filepath.Join(cwd, "whisper", "whisper-cublas-12.4.0-bin-x64", "Release"),
@@ -42,6 +46,8 @@ func NewWhisperClient() (*WhisperClient, error) {
 	possibleModelDirs := []string{
 		exeDir,
 		cwd,
+		filepath.Join(exeDir, "resources"),
+		filepath.Join(cwd, "resources"),
 		filepath.Join(cwd, "ai"),
 		filepath.Join(exeDir, "ai"),
 		filepath.Join(cwd, "whisper", "whisper.cpp.small"),
@@ -100,6 +106,14 @@ func (w *WhisperClient) Transcribe(wavPath string) (string, error) {
 	// -bo 1: Best of 1 (Vital para velocidad)
 	// --max-len 0: Sin límite de longitud de segmento
 	cmd := exec.Command(w.binaryPath, "-m", w.modelPath, "-f", wavPath, "-nt", "-l", "auto", "-t", "8", "-bs", "1", "-bo", "1")
+
+	// Hide window on Windows to prevent stealing focus
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			HideWindow:    true,
+			CreationFlags: 0x08000000, // CREATE_NO_WINDOW
+		}
+	}
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

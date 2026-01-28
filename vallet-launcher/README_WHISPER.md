@@ -26,3 +26,5 @@ vallet-launcher/
 2. Habla.
 3. Presiona `Ctrl + Alt + Space` nuevamente para detener.
 4. Espera unos segundos y el texto se pegará automáticamente donde esté tu cursor.
+
+
