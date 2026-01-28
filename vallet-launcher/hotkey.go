@@ -6,11 +6,13 @@ import (
 	"runtime"
 	"syscall"
 	"unsafe"
+	"vallet-launcher/utils"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var (
+	// user32 carga la librería dinámica de Windows necesaria para registrar hotkeys globales.
 	user32      = syscall.NewLazyDLL("user32.dll")
 	reghotkey   = user32.NewProc("RegisterHotKey")
 	unreghotkey = user32.NewProc("UnregisterHotKey")
@@ -18,13 +20,15 @@ var (
 )
 
 const (
+	// Modificadores de teclas y códigos de teclas virtuales.
 	MOD_ALT     = 0x0001
 	MOD_CONTROL = 0x0002
 	MOD_SHIFT   = 0x0004
-	VK_SPACE    = 0x20
-	WM_HOTKEY   = 0x0312
+	VK_SPACE    = 0x20   // Código de la barra espaciadora.
+	WM_HOTKEY   = 0x0312 // Identificador del mensaje de evento de hotkey.
 )
 
+// MSG representa la estructura del sistema de Windows para mensajes de eventos.
 type MSG struct {
 	HWND   uintptr
 	Uint   uint32
@@ -34,40 +38,48 @@ type MSG struct {
 	Pt     struct{ X, Y int32 }
 }
 
+// setupHotkeys registra y escucha los atajos de teclado globales (Ctrl+Shift+Espacio y Ctrl+Alt+Espacio).
 func (a *App) setupHotkeys(ctx context.Context) {
+	// Solo disponible en Windows por el uso de la API Win32.
 	if runtime.GOOS != "windows" {
 		return
 	}
 
 	recording := false
 
+	// Se lanza en una goroutine para no bloquear el hilo principal de la UI.
 	go func() {
-		// ID 1: Launcher (Ctrl + Shift + Space)
+		// ID 1: Atajo para mostrar el Launcher (Ctrl + Shift + Espacio).
 		hotkeyID_Launcher := 1
 		reghotkey.Call(0, uintptr(hotkeyID_Launcher), MOD_CONTROL|MOD_SHIFT, VK_SPACE)
 		defer unreghotkey.Call(0, uintptr(hotkeyID_Launcher))
 
-		// ID 2: Whisper (Ctrl + Alt + Space)
+		// ID 2: Atajo para activar grabación por voz Whisper (Ctrl + Alt + Espacio).
 		hotkeyID_Whisper := 2
 		reghotkey.Call(0, uintptr(hotkeyID_Whisper), MOD_CONTROL|MOD_ALT, VK_SPACE)
 		defer unreghotkey.Call(0, uintptr(hotkeyID_Whisper))
 
 		var msg MSG
 		for {
+			// Escucha de mensajes del sistema de Windows.
 			ret, _, _ := getmessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
 			if int32(ret) <= 0 {
 				break
 			}
 
+			// Procesa el mensaje si corresponde a un hotkey registrado.
 			if msg.Uint == WM_HOTKEY {
 				switch msg.Wparam {
 				case uintptr(hotkeyID_Launcher):
+					// Muestra la ventana del buscador.
 					a.ShowWindow()
 
 				case uintptr(hotkeyID_Whisper):
+					// Alterna la grabación de audio.
 					if !recording {
 						recording = true
-						wailsruntime.WindowShow(ctx)
+						// Muestra la ventana en modo grabación sin quitarle el foco a la app actual.
+						utils.ShowWindowNoActivate("Vallet Launcher")
 						wailsruntime.EventsEmit(ctx, "start-recording")
 						fmt.Println("🎙️ Iniciando grabación via Frontend...")
 					} else {

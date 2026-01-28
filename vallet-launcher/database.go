@@ -9,26 +9,30 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// Link representa un acceso directo guardado por el usuario.
 type Link struct {
 	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	CreatedAt   string `json:"created_at"`
+	Name        string `json:"name"`        // Alias o nombre del link.
+	URL         string `json:"url"`         // Dirección web o comando.
+	Description string `json:"description"` // Descripción opcional.
+	Category    string `json:"category"`    // Categoría para organizar links.
+	CreatedAt   string `json:"created_at"`  // Fecha de creación.
 }
 
+// Database encapsula la conexión a la base de datos SQLite.
 type Database struct {
 	db *sql.DB
 }
 
+// NewDatabase inicializa la conexión con SQLite, creando el archivo y las tablas si no existen.
 func NewDatabase() (*Database, error) {
-	// Obtener directorio de datos del usuario
+	// Obtener el directorio de datos del usuario (Home).
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
 
+	// Crear carpeta oculta para la base de datos en el home del usuario.
 	dbDir := filepath.Join(homeDir, ".vallet-launcher")
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return nil, err
@@ -48,6 +52,7 @@ func NewDatabase() (*Database, error) {
 	return database, nil
 }
 
+// createTables crea las tablas necesarias ('links' y 'settings') si no existen.
 func (d *Database) createTables() error {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS links (
@@ -70,13 +75,14 @@ func (d *Database) createTables() error {
 		}
 	}
 
-	// Insert default settings if not exist
+	// Insertar configuraciones por defecto si es la primera vez que se ejecuta.
 	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('run_in_background', 'false')")
 	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_browser', 'system')")
 
 	return nil
 }
 
+// GetSetting recupera un valor de la tabla settings.
 func (d *Database) GetSetting(key string) (string, error) {
 	var value string
 	err := d.db.QueryRow("SELECT value FROM settings WHERE key = ?", key).Scan(&value)
@@ -86,6 +92,7 @@ func (d *Database) GetSetting(key string) (string, error) {
 	return value, err
 }
 
+// UpdateSetting guarda o actualiza un valor de configuración.
 func (d *Database) UpdateSetting(key, value string) error {
 	_, err := d.db.Exec("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, value)
 	return err

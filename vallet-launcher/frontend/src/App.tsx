@@ -5,19 +5,20 @@ import { main } from "../wailsjs/go/models";
 import { EventsOn } from "../wailsjs/runtime/runtime";
 
 function App() {
-    const [query, setQuery] = useState('');
-    const [appMode, setAppMode] = useState<'launcher' | 'admin' | 'recording'>('launcher');
-    const [showAdmin, setShowAdmin] = useState(false);
-    const [links, setLinks] = useState<main.Link[]>([]);
-    const [editingLink, setEditingLink] = useState<main.Link | null>(null);
-    const [searchResults, setSearchResults] = useState<main.Link[]>([]);
-    const [activeTab, setActiveTab] = useState('links');
-    const [runInBackground, setRunInBackground] = useState(false);
-    const [defaultBrowser, setDefaultBrowser] = useState('system');
-    const [saveProgress, setSaveProgress] = useState(0);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    // === Estados de la Aplicación ===
+    const [query, setQuery] = useState(''); // Texto ingresado en el buscador.
+    const [appMode, setAppMode] = useState<'launcher' | 'admin' | 'recording'>('launcher'); // Modo visual actual.
+    const [showAdmin, setShowAdmin] = useState(false); // Controla si se muestra el panel de admin.
+    const [links, setLinks] = useState<main.Link[]>([]); // Lista completa de links (para admin).
+    const [editingLink, setEditingLink] = useState<main.Link | null>(null); // Link que se está editando.
+    const [searchResults, setSearchResults] = useState<main.Link[]>([]); // Resultados de búsqueda filtrados.
+    const [activeTab, setActiveTab] = useState('links'); // Pestaña activa en el panel de admin.
+    const [runInBackground, setRunInBackground] = useState(false); // Ajuste de ejecución en segundo plano.
+    const [defaultBrowser, setDefaultBrowser] = useState('system'); // Navegador preferido.
+    const [saveProgress, setSaveProgress] = useState(0); // Progreso visual de guardado.
+    const [isSaving, setIsSaving] = useState(false); // Estado de guardado en curso.
+    const [isRecording, setIsRecording] = useState(false); // Estado de grabación activa.
+    const inputRef = useRef<HTMLInputElement>(null); // Referencia al input del buscador.
 
     // Recording logic ref
     const recordingRef = useRef<{
@@ -27,16 +28,19 @@ function App() {
         chunks: Int16Array[];
     }>({ stream: null, processor: null, context: null, chunks: [] });
 
+    // === Lógica de Grabación de Audio ===
     const startRecording = async () => {
         try {
+            // Solicitar acceso al micrófono.
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Configurar contexto de audio a 16kHz (requerido por Whisper).
             const context = new AudioContext({ sampleRate: 16000 });
             const source = context.createMediaStreamSource(stream);
-            // We use a small buffer for performance
             const processor = context.createScriptProcessor(4096, 1, 1);
 
             const chunks: Int16Array[] = [];
 
+            // Capturar datos de audio y convertirlos a Int16 (PCM).
             processor.onaudioprocess = (e) => {
                 const inputData = e.inputBuffer.getChannelData(0);
                 const int16Data = new Int16Array(inputData.length);
@@ -53,7 +57,7 @@ function App() {
             recordingRef.current = { stream, processor, context, chunks };
             setIsRecording(true);
         } catch (err) {
-            console.error("Error starting recording:", err);
+            console.error("Error iniciando grabación:", err);
         }
     };
 
@@ -62,11 +66,12 @@ function App() {
         setIsRecording(false);
         if (!context || !processor || !stream) return;
 
+        // Desconectar y cerrar el flujo de audio.
         processor.disconnect();
         stream.getTracks().forEach(track => track.stop());
         context.close();
 
-        // Encode and send
+        // Procesar los fragmentos de audio capturados.
         if (chunks.length > 0) {
             const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
             const pcmData = new Int16Array(totalLength);
@@ -76,15 +81,16 @@ function App() {
                 offset += chunk.length;
             }
 
+            // Convertir buffer PCM a formato WAV.
             const wavBuffer = encodeWAV(pcmData, 16000);
-            // Convert to base64
+            // Convertir el WAV resultante a Base64 para enviarlo al backend de Go.
             const uint8 = new Uint8Array(wavBuffer);
             let binary = '';
             for (let i = 0; i < uint8.byteLength; i++) {
                 binary += String.fromCharCode(uint8[i]);
             }
             const base64 = btoa(binary);
-            ProcessAudio(base64);
+            ProcessAudio(base64); // Invocación a Go.
         }
     };
 
@@ -121,8 +127,9 @@ function App() {
     };
 
     useEffect(() => {
+        // Escuchar eventos globales enviados desde Go.
         const unsubsStart = EventsOn("start-recording", () => {
-            // If we are not in admin mode, switch to recording view
+            // Si el foco está fuera del launcher, mostrar la mini-ventana de grabación.
             if (!showAdmin) {
                 setAppMode('recording');
                 SetRecordingSize();
@@ -133,7 +140,7 @@ function App() {
         const unsubsStop = EventsOn("stop-recording", () => {
             stopRecording();
 
-            // If we were in recording mode, go back to launcher or hide
+            // Al detener, volver al modo launcher tras un breve retardo.
             if (appMode === 'recording') {
                 setTimeout(() => {
                     setAppMode('launcher');
@@ -215,9 +222,11 @@ function App() {
     }, [showAdmin]);
 
     useEffect(() => {
+        // Lógica de búsqueda reactiva.
         if (query.length > 0) {
             SearchLinks(query).then(results => {
                 setSearchResults(results || []);
+                // Expandir la ventana si hay resultados.
                 if (results && results.length > 0) {
                     SetLauncherExpandedSize();
                 } else {

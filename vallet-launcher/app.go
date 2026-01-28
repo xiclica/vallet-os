@@ -17,87 +17,90 @@ import (
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// ProcessAudio receives audio from frontend, transcribes it and pastes it
+// ProcessAudio recibe el audio en formato base64 desde el frontend, lo transcribe usando Whisper
+// y pega el texto resultante en la aplicación activa del usuario.
 func (a *App) ProcessAudio(base64Data string) {
 	fmt.Println("🎙️ Procesando audio recibido...")
 
-	// 1. Decode base64
+	// 1. Decodificar la cadena base64 a bytes.
 	data, err := base64.StdEncoding.DecodeString(base64Data)
 	if err != nil {
-		log.Printf("Error decoding audio: %v", err)
+		log.Printf("Error decodificando audio: %v", err)
 		return
 	}
 
-	// 2. Save to temp file
+	// 2. Guardar los bytes en un archivo temporal .wav.
 	tempFile := filepath.Join(os.TempDir(), "vallet_voice.wav")
 	err = os.WriteFile(tempFile, data, 0644)
 	if err != nil {
-		log.Printf("Error saving temp audio: %v", err)
+		log.Printf("Error guardando audio temporal: %v", err)
 		return
 	}
 
-	// 3. Transcribe with Whisper
+	// 3. Inicializar el cliente de Whisper y transcribir el archivo.
 	whisper, err := ai.NewWhisperClient()
 	if err != nil {
-		log.Printf("Error initializing Whisper: %v", err)
+		log.Printf("Error inicializando Whisper: %v", err)
 		return
 	}
 
 	text, err := whisper.Transcribe(tempFile)
 	if err != nil {
-		log.Printf("Transcription error: %v", err)
+		log.Printf("Error en la transcripción: %v", err)
 		return
 	}
 
+	// 4. Si hay texto, pegarlo automáticamente usando las utilidades del sistema.
 	if text != "" {
 		fmt.Printf("📝 Transcripción: %s\n", text)
-		// 4. Paste text
 		err = utils.PasteText(text)
 		if err != nil {
-			log.Printf("Error pasting text: %v", err)
+			log.Printf("Error pegando texto: %v", err)
 		}
 	} else {
 		fmt.Println("⚠️ No se detectó texto en el audio.")
 	}
 }
 
-// App struct
+// App representa la estructura principal de la aplicación Wails.
 type App struct {
-	ctx context.Context
-	db  *Database
+	ctx context.Context // Contexto de la aplicación Wails.
+	db  *Database       // Referencia a la base de datos SQLite.
 }
 
-// NewApp creates a new App application struct
+// NewApp crea una nueva instancia de la aplicación.
 func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts.
+// startup se ejecuta automáticamente cuando Wails arranca.
+// Se usa para inicializar la base de datos y configurar hotkeys.
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	// Inicializar base de datos
+	// Conectar a la base de datos local.
 	db, err := NewDatabase()
 	if err != nil {
-		log.Fatal("Error initializing database:", err)
+		log.Fatal("Error inicializando base de datos:", err)
 	}
 	a.db = db
 
-	// Configurar atajos de teclado globales
+	// Configurar los atajos de teclado globales (Ctrl+Alt+Espacio, etc.).
 	a.setupHotkeys(ctx)
 }
 
-// domReady is called after front-end resources have been loaded
+// domReady se ejecuta cuando el frontend (HTML/JS) ha terminado de cargar.
 func (a *App) domReady(ctx context.Context) {
-	// Aquí puedes agregar lógica después de que el DOM esté listo
+	// Espacio para lógica adicional post-carga.
 }
 
-// beforeClose is called when the application is about to quit
+// beforeClose se ejecuta antes de que la ventana se cierre.
+// Permite implementar la opción de "minimizar a la bandeja" en vez de cerrar.
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	bg, _ := a.GetSettingBackend("run_in_background")
 	if bg == "true" {
 		wailsruntime.WindowHide(a.ctx)
-		return true // Prevent closing
+		return true // Cancela el cierre y oculta la ventana.
 	}
 
 	if a.db != nil {
@@ -106,23 +109,23 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 	return false
 }
 
-// shutdown is called at application termination
+// shutdown se llama al terminar definitivamente la aplicación.
 func (a *App) shutdown(ctx context.Context) {
 	if a.db != nil {
 		a.db.Close()
 	}
 }
 
-// openURLWithBrowser abre una URL con el navegador especificado
+// openURLWithBrowser abre una URL utilizando un navegador específico o el del sistema.
 func (a *App) openURLWithBrowser(url string) error {
 	browser, err := a.db.GetSetting("default_browser")
 	if err != nil || browser == "" || browser == "system" {
-		// Usar navegador del sistema por defecto
+		// Abre con el navegador predeterminado del sistema operativo.
 		wailsruntime.BrowserOpenURL(a.ctx, url)
 		return nil
 	}
 
-	// Abrir con navegador específico en Windows
+	// Lógica específica para abrir navegadores en Windows si se ha configurado uno.
 	if runtime.GOOS == "windows" {
 		var cmd *exec.Cmd
 		switch browser {
@@ -137,35 +140,32 @@ func (a *App) openURLWithBrowser(url string) error {
 		case "opera":
 			cmd = exec.Command("cmd", "/C", "start", "opera", url)
 		default:
-			// Si no se reconoce el navegador, usar el del sistema
 			wailsruntime.BrowserOpenURL(a.ctx, url)
 			return nil
 		}
 		return cmd.Start()
 	}
 
-	// Para otros sistemas operativos, usar el navegador del sistema
 	wailsruntime.BrowserOpenURL(a.ctx, url)
 	return nil
 }
 
-// OpenSomething tries to open either a URL or an application
+// OpenSomething procesa la entrada del buscador (un comando, una URL o un alias guardado).
 func (a *App) OpenSomething(input string) {
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return
 	}
 
-	// Primero buscar en la base de datos
+	// 1. Buscar si el input coincide con un alias de link en la base de datos.
 	links, err := a.db.SearchLinks(input)
 	if err == nil && len(links) > 0 {
-		// Si encuentra un link, abrirlo con el navegador seleccionado
 		a.openURLWithBrowser(links[0].URL)
 		wailsruntime.WindowHide(a.ctx)
 		return
 	}
 
-	// Check if it's a URL
+	// 2. Verificar si es una URL directa (ej: google.com).
 	if strings.HasPrefix(input, "http://") || strings.HasPrefix(input, "https://") || (strings.Contains(input, ".") && !strings.Contains(input, " ")) {
 		url := input
 		if !strings.HasPrefix(input, "http") {
@@ -173,100 +173,109 @@ func (a *App) OpenSomething(input string) {
 		}
 		a.openURLWithBrowser(url)
 	} else {
-		// Try to run as a command (Windows specific for now)
+		// 3. Intentar ejecutarlo como un comando del sistema (abrir apps como 'notepad').
 		if runtime.GOOS == "windows" {
 			exec.Command("cmd", "/C", "start", "", input).Start()
 		} else {
-			// For Mac/Linux
 			exec.Command("open", input).Start()
 		}
 	}
 
-	// Hide the window after action
+	// Ocultar la ventana del launcher después de realizar la acción.
 	wailsruntime.WindowHide(a.ctx)
 }
 
-// HideWindow hides the application window
+// HideWindow oculta la ventana principal.
 func (a *App) HideWindow() {
 	wailsruntime.WindowHide(a.ctx)
 }
 
-// ShowWindow shows the application window
+// ShowWindow restaura y muestra la ventana principal.
 func (a *App) ShowWindow() {
 	wailsruntime.WindowUnminimise(a.ctx)
 	wailsruntime.WindowShow(a.ctx)
 	wailsruntime.EventsEmit(a.ctx, "window-shown")
 }
 
+// SetAdminSize ajusta el tamaño de la ventana para el panel de administración.
 func (a *App) SetAdminSize() {
 	wailsruntime.WindowSetSize(a.ctx, 1200, 650)
 	wailsruntime.WindowCenter(a.ctx)
 }
 
-// SetLauncherSize resizes the window for launcher mode
+// SetLauncherSize ajusta el tamaño de la ventana al modo buscador minimalista.
 func (a *App) SetLauncherSize() {
-	wailsruntime.WindowSetSize(a.ctx, 660, 120)
-	wailsruntime.WindowCenter(a.ctx)
+	if runtime.GOOS == "windows" {
+		utils.CenterWindowNoActivate("Vallet Launcher", 660, 120)
+	} else {
+		wailsruntime.WindowSetSize(a.ctx, 660, 120)
+		wailsruntime.WindowCenter(a.ctx)
+	}
 }
 
-// SetLauncherExpandedSize resizes the window to show search results
+// SetLauncherExpandedSize expande la ventana para mostrar sugerencias de búsqueda.
 func (a *App) SetLauncherExpandedSize() {
-	wailsruntime.WindowSetSize(a.ctx, 660, 480)
-	wailsruntime.WindowCenter(a.ctx)
+	if runtime.GOOS == "windows" {
+		utils.CenterWindowNoActivate("Vallet Launcher", 660, 480)
+	} else {
+		wailsruntime.WindowSetSize(a.ctx, 660, 480)
+		wailsruntime.WindowCenter(a.ctx)
+	}
 }
 
-// SetRecordingSize resizes the window for a small recording indicator
+// SetRecordingSize ajusta la ventana a un indicador pequeño durante la grabación de voz.
 func (a *App) SetRecordingSize() {
-	wailsruntime.WindowSetSize(a.ctx, 280, 80)
-	wailsruntime.WindowCenter(a.ctx)
+	if runtime.GOOS == "windows" {
+		utils.CenterWindowNoActivate("Vallet Launcher", 280, 80)
+	} else {
+		wailsruntime.WindowSetSize(a.ctx, 280, 80)
+		wailsruntime.WindowCenter(a.ctx)
+	}
 }
 
-// ============ CRUD Operations for Links ============
+// ============ Operaciones CRUD para Links y Settings ============
 
-// GetAllLinks returns all saved links
+// GetAllLinks obtiene todos los links guardados por el usuario.
 func (a *App) GetAllLinks() ([]Link, error) {
 	return a.db.GetAllLinks()
 }
 
-// GetLinkByID returns a link by ID
+// GetLinkByID busca un link específico por su identificador único.
 func (a *App) GetLinkByID(id int) (*Link, error) {
 	return a.db.GetLinkByID(id)
 }
 
-// SearchLinks searches for links matching the query
+// SearchLinks busca links que coincidan con el texto ingresado.
 func (a *App) SearchLinks(query string) ([]Link, error) {
 	return a.db.SearchLinks(query)
 }
 
-// CreateLink creates a new link
+// CreateLink guarda un nuevo link con su alias en la base de datos.
 func (a *App) CreateLink(link Link) (int64, error) {
 	return a.db.CreateLink(link)
 }
 
-// UpdateLink updates an existing link
+// UpdateLink actualiza los datos de un link existente.
 func (a *App) UpdateLink(link Link) error {
 	return a.db.UpdateLink(link)
 }
 
-// DeleteLink deletes a link by ID
+// DeleteLink elimina un link de la base de datos.
 func (a *App) DeleteLink(id int) error {
 	return a.db.DeleteLink(id)
 }
 
-// GetSettingBackend gets a setting value
+// GetSettingBackend recupera un valor de configuración desde la base de datos.
 func (a *App) GetSettingBackend(key string) (string, error) {
 	return a.db.GetSetting(key)
 }
 
-// UpdateSettingBackend updates a setting value
+// UpdateSettingBackend actualiza o crea un valor de configuración.
 func (a *App) UpdateSettingBackend(key, value string) error {
 	return a.db.UpdateSetting(key, value)
 }
 
-// QuitApp closes the application completely
+// QuitApp cierra la aplicación de forma segura, disparando los hooks de limpieza.
 func (a *App) QuitApp() {
-	// We set the setting to false temporarily or just use runtime.Quit
-	// but to bypass beforeClose we can just exit the process or clear the setting
-	// Better way: Wails provides runtime.Quit which triggers OnShutdown but we can force it
 	wailsruntime.Quit(a.ctx)
 }

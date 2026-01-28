@@ -7,26 +7,27 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
-// PasteText types the text by pasting it from the clipboard
+// PasteText simula la acción de pegar texto (Ctrl+V) después de copiarlo al portapapeles.
 func PasteText(text string) error {
-	// Backup clipboard? Optional. For now just overwrite.
+	// 1. Escribir el texto en el portapapeles del sistema.
 	if err := clipboard.WriteAll(text); err != nil {
 		return err
 	}
 
+	// 2. Inicializar el simulador de eventos de teclado.
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		return err
 	}
 
-	// For Windows and others
+	// 3. Configurar la combinación de teclas Ctrl + V.
 	kb.HasCTRL(true)
 	kb.SetKeys(keybd_event.VK_V)
 
-	// Small delay to ensure clipboard is ready
+	// Pequeña espera para asegurar que el portapapeles procesó el nuevo texto.
 	time.Sleep(100 * time.Millisecond)
 
-	// Press
+	// 4. Ejecutar la pulsación de teclas.
 	err = kb.Launching()
 	if err != nil {
 		return err
