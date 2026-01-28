@@ -8,16 +8,17 @@ Descarga el ejecutable `whisper-cli.exe` optimizado para NVIDIA/CUDA.
 - Renombra el ejecutable a `whisper-cli.exe`.
 
 ## 2. Descargar Modelo
-Descarga el modelo `ggml-medium.bin`.
-- Enlace oficial: https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin
-- Colócalo junto al ejecutable.
+Descarga el modelo `ggml-small.bin`.
+- Enlace oficial: https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+- Colócalo junto al ejecutable o en `whisper/whisper.cpp.small/`.
 
 ## Estructura final esperada
 ```
 vallet-launcher/
 ├── vallet-launcher.exe
 ├── whisper-cli.exe
-└── ggml-medium.bin
+└── ggml-small.bin
+     (o en whisper/whisper.cpp.small/ggml-small.bin)
 ```
 
 ## Uso
@@ -25,4 +26,3 @@ vallet-launcher/
 2. Habla.
 3. Presiona `Ctrl + Alt + Space` nuevamente para detener.
 4. Espera unos segundos y el texto se pegará automáticamente donde esté tu cursor.
- 

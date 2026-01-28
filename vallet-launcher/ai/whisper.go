@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	WhisperType = "medium" // Model type
-	ModelName   = "ggml-medium.bin"
+	WhisperType = "small" // Model type
+	ModelName   = "ggml-small.bin"
 	BinaryName  = "whisper-cli.exe"
 )
 
@@ -44,7 +44,8 @@ func NewWhisperClient() (*WhisperClient, error) {
 		cwd,
 		filepath.Join(cwd, "ai"),
 		filepath.Join(exeDir, "ai"),
-		filepath.Join(cwd, "whisper", "whisper.cpp", "models"),
+		filepath.Join(cwd, "whisper", "whisper.cpp.small"),
+		filepath.Join(cwd, "whisper", "whisper.cpp.small", "models"),
 	}
 
 	binaryPath := ""
