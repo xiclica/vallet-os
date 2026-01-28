@@ -2,18 +2,25 @@
 
 Una aplicación de escritorio tipo Alfred/Spotlight construida con Wails (Go + React + TypeScript) para Windows, con gestión de links mediante SQLite.
 
-## 🚀 Funcionalidades Actuales
+## 🚀 Funcionalidades Principales
 
--   **Buscador Inteligente (`Ctrl + Shift + Space`)**: Acceso instantáneo a un buscador tipo Spotlight/Alfred.
-    -   Abre URLs directamente (ej. `google.com`).
-    -   Lanzar aplicaciones del sistema (ej. `notepad`, `calc`). (pendiente)
-    -   Busca en tu base de datos de links personalizados.
--   **Transcripción de Voz a Texto (`Ctrl + Alt + Space`)**: usando un modelo local small de whisper genera transcripciones rapidas (en mi caso usando GPU).
-    -   Graba audio y lo transcribe localmente con alta precisión.
-    -   **Auto-Paste**: El texto transcrito se pega automáticamente en la aplicación que tengas abierta y tenga el focus input en ese momento.
--   **Gestión de Links (Panel Admin)**: CRUD completo para guardar tus sitios y comandos frecuentes.
--   **Interfaz Premium**: Diseño moderno con efectos de desenfoque (glassmorphism), animaciones suaves y modo siempre al frente.
--   **Base de Datos Local**: Todo se guarda de forma segura en una base de datos SQLite local.
+Vallet Launcher no es solo un buscador, es tu asistente central de productividad:
+
+-   **🔍 Buscador Inteligente (`Ctrl + Shift + Espacio`)**: 
+    -   **Acceso Instantáneo**: Lanzador tipo Spotlight/Alfred optimizado para Windows.
+    -   **Navegación Web**: Abre URLs directamente o busca en tus marcadores personalizados.
+    -   **Comandos de Sistema**: Lanzamiento rápido de aplicaciones (ej. `notepad`, `calc`, `control`).
+-   **🎙️ Transcripción de Voz a Texto (`Ctrl + Alt + Espacio`)**:
+    -   **Potenciado por Whisper**: Utiliza tecnología de IA local para transcripciones precisas.
+    -   **Integración Fluida**: El texto transcrito se pega automáticamente en cualquier campo de texto activo (Auto-Paste).
+    -   **Privacidad Total**: Todo el procesamiento ocurre en tu máquina, sin enviar audio a la nube.
+-   **⚙️ Panel de Administración**:
+    -   **Gestión de Links**: Interfaz intuitiva para añadir, editar y organizar tus sitios y herramientas favoritas.
+    -   **Base de Datos SQLite**: Almacenamiento local robusto y rápido.
+-   **✨ Experiencia Premium**:
+    -   **Diseño Moderno**: Efectos de cristal (Glassmorphism), fuentes elegantes (Inter/Nunito) y animaciones fluidas.
+    -   **Minimalismo al Frente**: La aplicación se mantiene siempre accesible pero fuera de tu camino cuando no la necesitas.
+
 
 ## 🎙️ Configuración de Whisper (Tutorial)
 
