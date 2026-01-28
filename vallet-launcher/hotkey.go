@@ -96,22 +96,30 @@ func (a *App) setupHotkeys(ctx context.Context) {
 					a.ShowWindow()
 
 				case uintptr(hotkeyID_Whisper):
-					// Alterna la grabación de audio.
+					// Alterna la grabación de audio Whisper.
 					if !recording {
 						recording = true
-						// Muestra la ventana en modo grabación sin quitarle el foco a la app actual.
+
+						// 1. Redimensionar primero (en segundo plano).
+						a.SetRecordingSize()
+
+						// 2. Avisar al frontend para que cambie a modo grabación.
+						wailsruntime.EventsEmit(ctx, "start-recording")
+
+						// 3. Reproducir sonido de inicio.
+						a.PlaySound("start-recording.wav")
+
+						// 4. Mostrar la ventana finalmente (ya configurada).
 						utils.ShowWindowNoActivate("Vallet Launcher")
 
-						// Reproducir sonido de inicio y emitir evento al frontend.
-						a.PlaySound("start-recording.wav")
-						wailsruntime.EventsEmit(ctx, "start-recording")
-						fmt.Println("🎙️ Iniciando grabación via Frontend...")
+						fmt.Println("🎙️ Iniciando grabación...")
 					} else {
 						recording = false
 
-						// Reproducir sonido de fin y emitir evento al frontend.
-						a.PlaySound("end-recording.wav")
+						// Notificar parada y reproducir sonido final.
 						wailsruntime.EventsEmit(ctx, "stop-recording")
+						a.PlaySound("end-recording.wav")
+
 						fmt.Println("⏹️ Deteniendo grabación...")
 					}
 

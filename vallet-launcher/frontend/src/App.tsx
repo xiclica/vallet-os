@@ -19,6 +19,7 @@ function App() {
     const [isSaving, setIsSaving] = useState(false); // Estado de guardado en curso.
     const [isRecording, setIsRecording] = useState(false); // Estado de grabación activa.
     const inputRef = useRef<HTMLInputElement>(null); // Referencia al input del buscador.
+    const uiResetTimeoutRef = useRef<number | null>(null); // Referencia al timeout de limpieza de la interfaz.
 
     // Recording logic ref
     const recordingRef = useRef<{
@@ -129,10 +130,16 @@ function App() {
     useEffect(() => {
         // Escuchar eventos globales enviados desde Go.
         const unsubsStart = EventsOn("start-recording", () => {
+            // Cancelar cualquier limpieza de UI pendiente si se inicia una nueva grabación.
+            if (uiResetTimeoutRef.current) {
+                clearTimeout(uiResetTimeoutRef.current);
+                uiResetTimeoutRef.current = null;
+            }
+
             // Si el foco está fuera del launcher, mostrar la mini-ventana de grabación.
             if (!showAdmin) {
                 setAppMode('recording');
-                SetRecordingSize();
+                // Ya no llamamos a SetRecordingSize aquí porque Go lo hace antes de mostrar la ventana.
             }
             startRecording();
         });
@@ -140,12 +147,16 @@ function App() {
         const unsubsStop = EventsOn("stop-recording", () => {
             stopRecording();
 
-            // Al detener, volver al modo launcher tras un breve retardo.
+            // Al detener, volver al modo launcher tras un breve retardo para que el usuario vea el estado final.
             if (appMode === 'recording') {
-                setTimeout(() => {
+                // Cancelar cualquier limpieza previa.
+                if (uiResetTimeoutRef.current) clearTimeout(uiResetTimeoutRef.current);
+
+                uiResetTimeoutRef.current = window.setTimeout(() => {
                     setAppMode('launcher');
                     SetLauncherSize();
                     HideWindow();
+                    uiResetTimeoutRef.current = null;
                 }, 1500);
             }
         });
@@ -153,8 +164,10 @@ function App() {
         return () => {
             unsubsStart();
             unsubsStop();
+            if (uiResetTimeoutRef.current) clearTimeout(uiResetTimeoutRef.current);
         };
     }, [showAdmin, appMode]);
+
 
     // Form state
     const [formData, setFormData] = useState({
