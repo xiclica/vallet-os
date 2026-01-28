@@ -3,7 +3,9 @@ module vallet-launcher
 go 1.24.0
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/getlantern/systray v1.2.2
+	github.com/micmonay/keybd_event v1.1.2
 	github.com/wailsapp/wails/v2 v2.11.0
 	modernc.org/sqlite v1.44.3
 )
