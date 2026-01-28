@@ -101,13 +101,20 @@ func (a *App) setupHotkeys(ctx context.Context) {
 						recording = true
 						// Muestra la ventana en modo grabación sin quitarle el foco a la app actual.
 						utils.ShowWindowNoActivate("Vallet Launcher")
+
+						// Reproducir sonido de inicio y emitir evento al frontend.
+						a.PlaySound("start-recording.wav")
 						wailsruntime.EventsEmit(ctx, "start-recording")
 						fmt.Println("🎙️ Iniciando grabación via Frontend...")
 					} else {
 						recording = false
+
+						// Reproducir sonido de fin y emitir evento al frontend.
+						a.PlaySound("end-recording.wav")
 						wailsruntime.EventsEmit(ctx, "stop-recording")
 						fmt.Println("⏹️ Deteniendo grabación...")
 					}
+
 				}
 			}
 		}

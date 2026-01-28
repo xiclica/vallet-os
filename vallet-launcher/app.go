@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"vallet-launcher/ai"
+	"vallet-launcher/audio"
 	"vallet-launcher/utils"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -277,6 +278,36 @@ func (a *App) GetSettingBackend(key string) (string, error) {
 // UpdateSettingBackend actualiza o crea un valor de configuración.
 func (a *App) UpdateSettingBackend(key, value string) error {
 	return a.db.UpdateSetting(key, value)
+}
+
+// PlaySound reproduce un archivo de audio WAV situado en la carpeta 'audios'.
+func (a *App) PlaySound(name string) {
+	// Intentar buscar el audio en:
+	// 1. . (Desarrollo)
+	// 2. resources/ (Producción)
+	paths := []string{
+		filepath.Join("audios", name),
+		filepath.Join("resources", "audios", name),
+	}
+
+	var audioPath string
+	for _, p := range paths {
+		if _, err := os.Stat(p); err == nil {
+			audioPath = p
+			break
+		}
+	}
+
+	if audioPath == "" {
+		fmt.Printf("⚠️ Audio no encontrado: %s en ninguna ruta conocida.\n", name)
+		return
+	}
+
+	// Reproducir el archivo usando la utilidad MCI.
+	err := audio.PlayWav(audioPath)
+	if err != nil {
+		fmt.Printf("❌ Error reproduciendo audio %s: %v\n", name, err)
+	}
 }
 
 // QuitApp cierra la aplicación de forma segura, disparando los hooks de limpieza.

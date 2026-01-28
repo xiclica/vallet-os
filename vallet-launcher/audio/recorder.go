@@ -5,6 +5,7 @@ import (
 	"log"
 	"path/filepath"
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -99,6 +100,35 @@ func (r *Recorder) mci(command string) error {
 	if ret != 0 {
 		return fmt.Errorf("Error MCI %d: %s", ret, r.getErrorString(uint32(ret)))
 	}
+	return nil
+}
+
+// mciStatic ejecuta comandos MCI de forma estática (sin una instancia de Recorder).
+func mciStatic(command string) error {
+	utf16Cmd, err := syscall.UTF16PtrFromString(command)
+	if err != nil {
+		return err
+	}
+	ret, _, _ := mciSendString.Call(uintptr(unsafe.Pointer(utf16Cmd)), 0, 0, 0)
+	if ret != 0 {
+		return fmt.Errorf("error MCI %d", ret)
+	}
+	return nil
+}
+
+// PlayWav reproduce un archivo .wav de forma asíncrona.
+func PlayWav(path string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	alias := fmt.Sprintf("play_%d", time.Now().UnixNano())
+	_ = mciStatic(fmt.Sprintf("open \"%s\" type waveaudio alias %s", absPath, alias))
+	_ = mciStatic(fmt.Sprintf("play %s", alias))
+
+	// No cerramos el alias aquí para permitir que el sonido termine.
+	// Windows cerrará los recursos al terminar el proceso.
 	return nil
 }
 

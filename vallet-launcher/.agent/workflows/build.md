@@ -36,6 +36,9 @@ vallet-launcher/
 └── resources/
     ├── whisper-cli.exe
     ├── ggml-small.bin
+    ├── audios/
+    │   ├── start-recording.wav
+    │   └── end-recording.wav
     └── ... (DLLs de GPU si aplican)
 ```
 

@@ -152,8 +152,11 @@ La aplicación utiliza:
 2. Gestiona tus links (Crear, Editar, Eliminar).
 3. Aparecerán instantáneamente como sugerencias mientras escribes en el buscador principal.
 
-## 🎯 Próximas Mejoras
+## 🎯 Roadmap de Actualizaciones
 
+- [ ] **🎵 Feedback Auditivo**: Integrar sonidos al iniciar y finalizar la grabación de voz.
+- [ ] **✨ Feedback Visual**: Agregar animaciones que indiquen cuando el audio se está procesando (Whisper).
+- [ ] **🖥️ Integración con Sistema**: Posibilidad de buscar y abrir cualquier aplicación instalada en el sistema.
 - [ ] Importar/Exportar links.
 - [ ] Estadísticas de uso.
 - [ ] Temas personalizables (claro/oscuro).
