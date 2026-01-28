@@ -25,7 +25,7 @@ func main() {
 	err := wails.Run(&options.App{
 		Title:            "Vallet Launcher",
 		Width:            660,
-		Height:           110,
+		Height:           120,
 		Frameless:        true,
 		AlwaysOnTop:      true,
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
@@ -53,7 +53,7 @@ func main() {
 
 func onReady(app *App) func() {
 	return func() {
-		iconData, err := os.ReadFile("build/appicon.png")
+		iconData, err := os.ReadFile("build/windows/icon.ico")
 		if err == nil {
 			systray.SetIcon(iconData)
 		}

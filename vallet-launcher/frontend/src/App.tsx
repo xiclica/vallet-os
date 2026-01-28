@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, GetSettingBackend, UpdateSettingBackend, QuitApp } from "../wailsjs/go/main/App";
+import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, GetSettingBackend, UpdateSettingBackend, QuitApp } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
+import { EventsOn } from "../wailsjs/runtime/runtime";
 
 function App() {
     const [query, setQuery] = useState('');
@@ -11,6 +12,9 @@ function App() {
     const [searchResults, setSearchResults] = useState<main.Link[]>([]);
     const [activeTab, setActiveTab] = useState('links');
     const [runInBackground, setRunInBackground] = useState(false);
+    const [defaultBrowser, setDefaultBrowser] = useState('system');
+    const [saveProgress, setSaveProgress] = useState(0);
+    const [isSaving, setIsSaving] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     // Form state
@@ -27,9 +31,15 @@ function App() {
             setRunInBackground(val === "true");
         });
 
-        if (inputRef.current && !showAdmin) {
-            inputRef.current.focus();
-        }
+        GetSettingBackend("default_browser").then(val => {
+            if (val) setDefaultBrowser(val);
+        });
+
+        const handleFocus = () => {
+            if (inputRef.current && !showAdmin) {
+                inputRef.current.focus();
+            }
+        };
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -43,7 +53,25 @@ function App() {
         };
 
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('focus', handleFocus);
+
+        // Initial focus
+        handleFocus();
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [showAdmin]);
+
+    useEffect(() => {
+        const unsubscribe = EventsOn("window-shown", () => {
+            setQuery('');
+            if (inputRef.current && !showAdmin) {
+                inputRef.current.focus();
+            }
+        });
+        return () => unsubscribe();
     }, [showAdmin]);
 
     useEffect(() => {
@@ -56,11 +84,20 @@ function App() {
         if (query.length > 0) {
             SearchLinks(query).then(results => {
                 setSearchResults(results || []);
-            }).catch(() => setSearchResults([]));
+                if (results && results.length > 0) {
+                    SetLauncherExpandedSize();
+                } else {
+                    SetLauncherSize();
+                }
+            }).catch(() => {
+                setSearchResults([]);
+                SetLauncherSize();
+            });
         } else {
             setSearchResults([]);
+            if (!showAdmin) SetLauncherSize();
         }
-    }, [query]);
+    }, [query, showAdmin]);
 
     const loadLinks = async () => {
         try {
@@ -142,6 +179,31 @@ function App() {
     const toggleBackground = async (checked: boolean) => {
         setRunInBackground(checked);
         await UpdateSettingBackend("run_in_background", checked ? "true" : "false");
+    };
+
+    const handleBrowserChange = async (browser: string) => {
+        setDefaultBrowser(browser);
+        setIsSaving(true);
+        setSaveProgress(0);
+
+        // Simulación de progreso para feedback visual
+        const interval = setInterval(() => {
+            setSaveProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    return 100;
+                }
+                return prev + 5;
+            });
+        }, 30);
+
+        await UpdateSettingBackend("default_browser", browser);
+
+        // Mantener la barra llena un momento antes de desaparecer
+        setTimeout(() => {
+            setIsSaving(false);
+            setSaveProgress(0);
+        }, 1000);
     };
 
     const handleQuit = () => {
@@ -394,6 +456,39 @@ function App() {
                                                 <span className="slider"></span>
                                             </label>
                                         </div>
+
+                                        <div className="settings-item">
+                                            <div className="settings-info">
+                                                <span>Navegador por defecto</span>
+                                                <p>Selecciona con qué navegador se abrirán los enlaces.</p>
+                                            </div>
+                                            <select
+                                                className="browser-select"
+                                                value={defaultBrowser}
+                                                onChange={(e) => handleBrowserChange(e.target.value)}
+                                            >
+                                                <option value="system">Predeterminado del Sistema</option>
+                                                <option value="chrome">Google Chrome</option>
+                                                <option value="firefox">Mozilla Firefox</option>
+                                                <option value="edge">Microsoft Edge</option>
+                                                <option value="brave">Brave Browser</option>
+                                                <option value="opera">Opera</option>
+                                            </select>
+                                        </div>
+                                        {isSaving && (
+                                            <div className="progress-container">
+                                                <div
+                                                    className="progress-bar"
+                                                    style={{
+                                                        width: `${saveProgress}%`,
+                                                        backgroundColor: saveProgress < 50 ? '#fbbf24' : '#10b981' // Amarillo a Verde
+                                                    }}
+                                                ></div>
+                                                <span className="progress-text">
+                                                    {saveProgress < 100 ? 'Guardando...' : '¡Guardado!'}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="danger-zone">
@@ -419,52 +514,56 @@ function App() {
 
     return (
         <div className="container">
-            <div className={`search-box ${searchResults.length > 0 ? 'has-results' : ''}`}>
-                <button className="admin-link-top" onClick={() => {
-                    setShowAdmin(true);
-                    SetAdminSize();
-                }} title="Administrar">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </button>
-                <form onSubmit={handleSearch}>
-                    <div className="search-input-container">
-                        <svg className="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <div className="launcher-content">
+                <div className="search-box">
+                    <button className="admin-link-top" onClick={() => {
+                        setShowAdmin(true);
+                        SetAdminSize();
+                    }} title="Administrar">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            placeholder="Buscar aplicación o sitio web..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            autoFocus
-                        />
+                    </button>
+                    <form onSubmit={handleSearch}>
+                        <div className="search-input-container">
+                            <svg className="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                placeholder="Buscar aplicación o sitio web..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                    </form>
+
+                    <div className="hint">
+                        Presiona <span className="key">Enter</span> para abrir ·
+                        <span className="key">Esc</span> para ocultar
                     </div>
-                </form>
+                </div>
 
                 {searchResults.length > 0 && (
-                    <div className="search-results">
-                        {searchResults.map((link) => (
-                            <div
-                                key={link.id}
-                                className="result-item"
-                                onClick={() => handleLinkClick(link)}
-                            >
-                                <div className="result-name">{link.name}</div>
-                                <div className="result-url">{link.url}</div>
-                            </div>
-                        ))}
+                    <div className="results-box">
+                        <div className="search-results">
+                            {searchResults.map((link) => (
+                                <div
+                                    key={link.id}
+                                    className="result-item"
+                                    onClick={() => handleLinkClick(link)}
+                                >
+                                    <div className="result-name">{link.name}</div>
+                                    <div className="result-url">{link.url}</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
-
-                <div className="hint">
-                    Presiona <span className="key">Enter</span> para abrir ·
-                    <span className="key">Esc</span> para ocultar
-                </div>
             </div>
         </div>
     );

@@ -62,6 +62,42 @@ func (a *App) shutdown(ctx context.Context) {
 	}
 }
 
+// openURLWithBrowser abre una URL con el navegador especificado
+func (a *App) openURLWithBrowser(url string) error {
+	browser, err := a.db.GetSetting("default_browser")
+	if err != nil || browser == "" || browser == "system" {
+		// Usar navegador del sistema por defecto
+		wailsruntime.BrowserOpenURL(a.ctx, url)
+		return nil
+	}
+
+	// Abrir con navegador específico en Windows
+	if runtime.GOOS == "windows" {
+		var cmd *exec.Cmd
+		switch browser {
+		case "chrome":
+			cmd = exec.Command("cmd", "/C", "start", "chrome", url)
+		case "firefox":
+			cmd = exec.Command("cmd", "/C", "start", "firefox", url)
+		case "edge":
+			cmd = exec.Command("cmd", "/C", "start", "msedge", url)
+		case "brave":
+			cmd = exec.Command("cmd", "/C", "start", "brave", url)
+		case "opera":
+			cmd = exec.Command("cmd", "/C", "start", "opera", url)
+		default:
+			// Si no se reconoce el navegador, usar el del sistema
+			wailsruntime.BrowserOpenURL(a.ctx, url)
+			return nil
+		}
+		return cmd.Start()
+	}
+
+	// Para otros sistemas operativos, usar el navegador del sistema
+	wailsruntime.BrowserOpenURL(a.ctx, url)
+	return nil
+}
+
 // OpenSomething tries to open either a URL or an application
 func (a *App) OpenSomething(input string) {
 	input = strings.TrimSpace(input)
@@ -72,8 +108,8 @@ func (a *App) OpenSomething(input string) {
 	// Primero buscar en la base de datos
 	links, err := a.db.SearchLinks(input)
 	if err == nil && len(links) > 0 {
-		// Si encuentra un link, abrirlo
-		wailsruntime.BrowserOpenURL(a.ctx, links[0].URL)
+		// Si encuentra un link, abrirlo con el navegador seleccionado
+		a.openURLWithBrowser(links[0].URL)
 		wailsruntime.WindowHide(a.ctx)
 		return
 	}
@@ -84,7 +120,7 @@ func (a *App) OpenSomething(input string) {
 		if !strings.HasPrefix(input, "http") {
 			url = "https://" + input
 		}
-		wailsruntime.BrowserOpenURL(a.ctx, url)
+		a.openURLWithBrowser(url)
 	} else {
 		// Try to run as a command (Windows specific for now)
 		if runtime.GOOS == "windows" {
@@ -106,7 +142,9 @@ func (a *App) HideWindow() {
 
 // ShowWindow shows the application window
 func (a *App) ShowWindow() {
+	wailsruntime.WindowUnminimise(a.ctx)
 	wailsruntime.WindowShow(a.ctx)
+	wailsruntime.EventsEmit(a.ctx, "window-shown")
 }
 
 func (a *App) SetAdminSize() {
@@ -117,6 +155,12 @@ func (a *App) SetAdminSize() {
 // SetLauncherSize resizes the window for launcher mode
 func (a *App) SetLauncherSize() {
 	wailsruntime.WindowSetSize(a.ctx, 660, 120)
+	wailsruntime.WindowCenter(a.ctx)
+}
+
+// SetLauncherExpandedSize resizes the window to show search results
+func (a *App) SetLauncherExpandedSize() {
+	wailsruntime.WindowSetSize(a.ctx, 660, 480)
 	wailsruntime.WindowCenter(a.ctx)
 }
 

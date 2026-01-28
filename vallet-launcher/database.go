@@ -72,6 +72,7 @@ func (d *Database) createTables() error {
 
 	// Insert default settings if not exist
 	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('run_in_background', 'false')")
+	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_browser', 'system')")
 
 	return nil
 }
