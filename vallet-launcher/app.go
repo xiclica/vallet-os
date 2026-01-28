@@ -215,6 +215,12 @@ func (a *App) SetLauncherExpandedSize() {
 	wailsruntime.WindowCenter(a.ctx)
 }
 
+// SetRecordingSize resizes the window for a small recording indicator
+func (a *App) SetRecordingSize() {
+	wailsruntime.WindowSetSize(a.ctx, 280, 80)
+	wailsruntime.WindowCenter(a.ctx)
+}
+
 // ============ CRUD Operations for Links ============
 
 // GetAllLinks returns all saved links

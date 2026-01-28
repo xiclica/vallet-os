@@ -67,6 +67,7 @@ func (a *App) setupHotkeys(ctx context.Context) {
 				case uintptr(hotkeyID_Whisper):
 					if !recording {
 						recording = true
+						wailsruntime.WindowShow(ctx)
 						wailsruntime.EventsEmit(ctx, "start-recording")
 						fmt.Println("🎙️ Iniciando grabación via Frontend...")
 					} else {

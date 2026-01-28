@@ -206,6 +206,88 @@ input::placeholder {
   }
 }
 
+/* Recording Only Mode Styles */
+.recording-only-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent !important;
+}
+
+.recording-pill {
+  background: rgba(18, 18, 23, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 10px 24px;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slidePillUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 220px;
+  max-width: fit-content;
+}
+
+@keyframes slidePillUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mic-icon-circle {
+  width: 32px;
+  height: 32px;
+  background: var(--danger);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.mic-icon-circle::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--danger);
+  opacity: 0.4;
+  animation: ripple 1.5s infinite ease-out;
+}
+
+@keyframes ripple {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.recording-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.recording-status {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.recording-hint {
+  font-size: 10px;
+  opacity: 0.6;
+  font-weight: 500;
+}
+
 /* Search Results Box */
 .results-box {
   margin-top: 10px;

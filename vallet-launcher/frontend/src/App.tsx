@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio } from "../wailsjs/go/main/App";
+import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, SetRecordingSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
 import { EventsOn } from "../wailsjs/runtime/runtime";
 
 function App() {
     const [query, setQuery] = useState('');
+    const [appMode, setAppMode] = useState<'launcher' | 'admin' | 'recording'>('launcher');
     const [showAdmin, setShowAdmin] = useState(false);
     const [links, setLinks] = useState<main.Link[]>([]);
     const [editingLink, setEditingLink] = useState<main.Link | null>(null);
@@ -120,13 +121,33 @@ function App() {
     };
 
     useEffect(() => {
-        const unsubsStart = EventsOn("start-recording", startRecording);
-        const unsubsStop = EventsOn("stop-recording", stopRecording);
+        const unsubsStart = EventsOn("start-recording", () => {
+            // If we are not in admin mode, switch to recording view
+            if (!showAdmin) {
+                setAppMode('recording');
+                SetRecordingSize();
+            }
+            startRecording();
+        });
+
+        const unsubsStop = EventsOn("stop-recording", () => {
+            stopRecording();
+
+            // If we were in recording mode, go back to launcher or hide
+            if (appMode === 'recording') {
+                setTimeout(() => {
+                    setAppMode('launcher');
+                    SetLauncherSize();
+                    HideWindow();
+                }, 1500);
+            }
+        });
+
         return () => {
             unsubsStart();
             unsubsStop();
         };
-    }, []);
+    }, [showAdmin, appMode]);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -178,6 +199,8 @@ function App() {
     useEffect(() => {
         const unsubscribe = EventsOn("window-shown", () => {
             setQuery('');
+            setAppMode('launcher');
+            SetLauncherSize();
             if (inputRef.current && !showAdmin) {
                 inputRef.current.focus();
             }
@@ -623,12 +646,33 @@ function App() {
         );
     }
 
+    if (appMode === 'recording') {
+        return (
+            <div className="recording-only-container">
+                <div className="recording-pill">
+                    <div className="mic-icon-circle">
+                        <svg viewBox="0 0 24 24" fill="white" style={{ width: '18px' }}>
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        </svg>
+                    </div>
+                    <div className="recording-text">
+                        <span className="recording-status">
+                            {isRecording ? "Escuchando..." : "Procesando..."}
+                        </span>
+                        <span className="recording-hint">Presiona el atajo para detener</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="container">
+        <div className="container" style={appMode === 'launcher' ? { opacity: 1 } : {}}>
             <div className="launcher-content">
                 <div className="search-box">
                     <button className="admin-link-top" onClick={() => {
                         setShowAdmin(true);
+                        setAppMode('admin');
                         SetAdminSize();
                     }} title="Administrar">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -645,22 +689,11 @@ function App() {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder={isRecording ? "Grabando... (vuelve a presionar el atajo para parar)" : "Buscar aplicación o sitio web..."}
+                                placeholder="Buscar aplicación o sitio web..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 autoFocus
                             />
-                            {isRecording && (
-                                <div className="recording-indicator">
-                                    <div className="recording-dot"></div>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff4444" strokeWidth="2" style={{ width: '20px' }}>
-                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                        <line x1="12" y1="19" x2="12" y2="23" />
-                                        <line x1="8" y1="23" x2="16" y2="23" />
-                                    </svg>
-                                </div>
-                            )}
                         </div>
                     </form>
 
