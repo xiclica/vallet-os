@@ -940,7 +940,7 @@ function App() {
                                 <div className="section-docs">
                                     <header className="dashboard-content-header">
                                         <h1>Documentación</h1>
-                                        <p>Guía completa para dominar Vallet Launcher y sus funcionalidades.</p>
+                                        <p>Guía completa para dominar Vallet OS y sus funcionalidades.</p>
                                     </header>
 
                                     <div className="docs-grid">
