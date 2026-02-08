@@ -280,6 +280,28 @@ func (a *App) UpdateSettingBackend(key, value string) error {
 	return a.db.UpdateSetting(key, value)
 }
 
+// ============ Operaciones CRUD para Carpetas (Folders) ============
+
+// GetAllFolders obtiene todas las carpetas disponibles.
+func (a *App) GetAllFolders() ([]Folder, error) {
+	return a.db.GetAllFolders()
+}
+
+// CreateFolder crea una nueva carpeta.
+func (a *App) CreateFolder(folder Folder) (int64, error) {
+	return a.db.CreateFolder(folder)
+}
+
+// UpdateFolder actualiza una carpeta existente.
+func (a *App) UpdateFolder(folder Folder) error {
+	return a.db.UpdateFolder(folder)
+}
+
+// DeleteFolder elimina una carpeta.
+func (a *App) DeleteFolder(id int) error {
+	return a.db.DeleteFolder(id)
+}
+
 // PlaySound reproduce un archivo de audio WAV situado en la carpeta 'audios'.
 func (a *App) PlaySound(name string) {
 	// Intentar buscar el audio en:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,7 +16,15 @@ type Link struct {
 	Name        string `json:"name"`        // Alias o nombre del link.
 	URL         string `json:"url"`         // Dirección web o comando.
 	Description string `json:"description"` // Descripción opcional.
-	Category    string `json:"category"`    // Categoría para organizar links.
+	Category    string `json:"category"`    // Categoría para organizar links (ahora se refiere al nombre o ID de la carpeta).
+	CreatedAt   string `json:"created_at"`  // Fecha de creación.
+}
+
+// Folder representa una agrupación de links.
+type Folder struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`        // Nombre de la carpeta.
+	Description string `json:"description"` // Descripción opcional.
 	CreatedAt   string `json:"created_at"`  // Fecha de creación.
 }
 
@@ -52,7 +61,7 @@ func NewDatabase() (*Database, error) {
 	return database, nil
 }
 
-// createTables crea las tablas necesarias ('links' y 'settings') si no existen.
+// createTables crea las tablas necesarias ('links', 'settings', 'folders') si no existen.
 func (d *Database) createTables() error {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS links (
@@ -67,6 +76,12 @@ func (d *Database) createTables() error {
 			key TEXT PRIMARY KEY,
 			value TEXT
 		);`,
+		`CREATE TABLE IF NOT EXISTS folders (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE,
+			description TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
 	}
 
 	for _, query := range queries {
@@ -78,6 +93,13 @@ func (d *Database) createTables() error {
 	// Insertar configuraciones por defecto si es la primera vez que se ejecuta.
 	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('run_in_background', 'false')")
 	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_browser', 'system')")
+	d.db.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('play_audio_transcription', 'true')")
+
+	// Insertar carpeta 'General' por defecto.
+	d.db.Exec("INSERT OR IGNORE INTO folders (name, description) VALUES ('General', 'Carpeta predeterminada para todos los links')")
+
+	// Migrar links de la categoría 'general' (o similar) a 'General' para consistencia con la carpeta.
+	d.db.Exec("UPDATE links SET category = 'General' WHERE LOWER(category) = 'general'")
 
 	return nil
 }
@@ -97,6 +119,8 @@ func (d *Database) UpdateSetting(key, value string) error {
 	_, err := d.db.Exec("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, value)
 	return err
 }
+
+// ============ Métodos para Links ============
 
 func (d *Database) GetAllLinks() ([]Link, error) {
 	rows, err := d.db.Query("SELECT id, name, url, description, category, created_at FROM links ORDER BY created_at DESC")
@@ -154,6 +178,10 @@ func (d *Database) SearchLinks(query string) ([]Link, error) {
 }
 
 func (d *Database) CreateLink(link Link) (int64, error) {
+	// Si no tiene categoría, asignar 'General' por defecto.
+	if link.Category == "" {
+		link.Category = "General"
+	}
 	result, err := d.db.Exec(
 		"INSERT INTO links (name, url, description, category) VALUES (?, ?, ?, ?)",
 		link.Name, link.URL, link.Description, link.Category,
@@ -175,6 +203,106 @@ func (d *Database) UpdateLink(link Link) error {
 func (d *Database) DeleteLink(id int) error {
 	_, err := d.db.Exec("DELETE FROM links WHERE id = ?", id)
 	return err
+}
+
+// ============ Métodos para Carpetas (Folders) ============
+
+func (d *Database) GetAllFolders() ([]Folder, error) {
+	rows, err := d.db.Query("SELECT id, name, description, created_at FROM folders ORDER BY name ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var folders []Folder
+	for rows.Next() {
+		var f Folder
+		err := rows.Scan(&f.ID, &f.Name, &f.Description, &f.CreatedAt)
+		if err != nil {
+			log.Println("Error scanning folder:", err)
+			continue
+		}
+		folders = append(folders, f)
+	}
+
+	return folders, nil
+}
+
+func (d *Database) CreateFolder(folder Folder) (int64, error) {
+	result, err := d.db.Exec(
+		"INSERT INTO folders (name, description) VALUES (?, ?)",
+		folder.Name, folder.Description,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
+func (d *Database) UpdateFolder(folder Folder) error {
+	// Al actualizar el nombre de una carpeta, también deberíamos actualizar los links asociados
+	// si usamos el nombre como identificador de categoría.
+	// Primero obtenemos el nombre antiguo si es necesario, pero aquí asumimos que el ID es estable.
+
+	var oldName string
+	err := d.db.QueryRow("SELECT name FROM folders WHERE id = ?", folder.ID).Scan(&oldName)
+	if err != nil {
+		return err
+	}
+
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("UPDATE folders SET name = ?, description = ? WHERE id = ?", folder.Name, folder.Description, folder.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if oldName != folder.Name {
+		_, err = tx.Exec("UPDATE links SET category = ? WHERE category = ?", folder.Name, oldName)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (d *Database) DeleteFolder(id int) error {
+	var name string
+	err := d.db.QueryRow("SELECT name FROM folders WHERE id = ?", id).Scan(&name)
+	if err != nil {
+		return err
+	}
+
+	// No permitir borrar la carpeta 'General'
+	if name == "General" {
+		return fmt.Errorf("no se puede eliminar la carpeta predeterminada 'General'")
+	}
+
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Mover links de esta carpeta a 'General' antes de borrarla
+	_, err = tx.Exec("UPDATE links SET category = 'General' WHERE category = ?", name)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec("DELETE FROM folders WHERE id = ?", id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (d *Database) Close() error {

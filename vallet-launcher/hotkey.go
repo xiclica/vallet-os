@@ -106,8 +106,10 @@ func (a *App) setupHotkeys(ctx context.Context) {
 						// 2. Avisar al frontend para que cambie a modo grabación.
 						wailsruntime.EventsEmit(ctx, "start-recording")
 
-						// 3. Reproducir sonido de inicio.
-						a.PlaySound("start-recording.wav")
+						// 3. Reproducir sonido de inicio si está habilitado.
+						if audioEnabled, _ := a.GetSettingBackend("play_audio_transcription"); audioEnabled != "false" {
+							a.PlaySound("start-recording.wav")
+						}
 
 						// 4. Mostrar la ventana finalmente (ya configurada).
 						utils.ShowWindowNoActivate("Vallet Launcher")
@@ -116,9 +118,11 @@ func (a *App) setupHotkeys(ctx context.Context) {
 					} else {
 						recording = false
 
-						// Notificar parada y reproducir sonido final.
+						// Notificar parada y reproducir sonido final si está habilitado.
 						wailsruntime.EventsEmit(ctx, "stop-recording")
-						a.PlaySound("end-recording.wav")
+						if audioEnabled, _ := a.GetSettingBackend("play_audio_transcription"); audioEnabled != "false" {
+							a.PlaySound("end-recording.wav")
+						}
 
 						fmt.Println("⏹️ Deteniendo grabación...")
 					}
