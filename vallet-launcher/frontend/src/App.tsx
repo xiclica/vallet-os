@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, SetRecordingSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio, GetAllFolders, CreateFolder, UpdateFolder, DeleteFolder } from "../wailsjs/go/main/App";
+import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, SetRecordingSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio, GetAllFolders, CreateFolder, UpdateFolder, DeleteFolder, GetUsageStats } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
 import { EventsOn } from "../wailsjs/runtime/runtime";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 
 function App() {
     // === Estados de la Aplicación ===
@@ -29,6 +30,7 @@ function App() {
     const [playAudioTranscription, setPlayAudioTranscription] = useState(true);
     const inputRef = useRef<HTMLInputElement>(null); // Referencia al input del buscador.
     const [selectedFolderFilter, setSelectedFolderFilter] = useState('Todas'); // Carpeta seleccionada para filtrar links en admin.
+    const [usageStats, setUsageStats] = useState<main.UsageLog[]>([]); // Estadísticas de uso de herramientas.
     const resultsRef = useRef<HTMLDivElement>(null); // Referencia al contenedor de resultados para el scroll.
     const uiResetTimeoutRef = useRef<number | null>(null); // Referencia al timeout de limpieza de la interfaz.
 
@@ -202,6 +204,8 @@ function App() {
             setPlayAudioTranscription(val !== "false");
         });
 
+        loadUsageStats();
+
         // Asegurar que el input tenga el foco al cargar la ventana.
         const handleFocus = () => {
             if (inputRef.current && !showAdmin) {
@@ -305,6 +309,15 @@ function App() {
             if (!showAdmin) SetLauncherSize();
         }
     }, [query, showAdmin]);
+
+    const loadUsageStats = async () => {
+        try {
+            const stats = await GetUsageStats();
+            setUsageStats(stats || []);
+        } catch (error) {
+            console.error("Error loading usage stats:", error);
+        }
+    };
 
     const loadLinks = async () => {
         try {
@@ -513,7 +526,10 @@ function App() {
                         <nav className="sidebar-nav">
                             <button
                                 className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('dashboard')}
+                                onClick={() => {
+                                    setActiveTab('dashboard');
+                                    loadUsageStats();
+                                }}
                             >
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                                 Dashboard
@@ -564,8 +580,8 @@ function App() {
                             {activeTab === 'dashboard' && (
                                 <div className="section-dashboard">
                                     <header className="dashboard-content-header">
-                                        <h1>Dashboard</h1>
-                                        <p>Resumen general de tus accesos y productividad.</p>
+                                        <h1>Dashboard de Productividad</h1>
+                                        <p>Análisis en tiempo real del uso de tus herramientas.</p>
                                     </header>
 
                                     <div className="stats-grid-dashboard">
@@ -574,23 +590,31 @@ function App() {
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
                                             </div>
                                             <div className="stat-card-info">
-                                                <span className="stat-label">Total Links</span>
+                                                <span className="stat-label">Uso de Links (Hoy)</span>
                                                 <div className="stat-row">
-                                                    <span className="stat-value">{links.length}</span>
-                                                    <span className="stat-trend positive">↑ 12%</span>
+                                                    <span className="stat-value">
+                                                        {usageStats
+                                                            .filter(s => s.tool_type === 'links' && s.date === new Date().toISOString().split('T')[0])
+                                                            .reduce((acc, curr) => acc + curr.count, 0)}
+                                                    </span>
+                                                    <span className="stat-trend positive">Hoy</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="stat-card-new">
                                             <div className="stat-card-icon green">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
                                             </div>
                                             <div className="stat-card-info">
-                                                <span className="stat-label">Activos</span>
+                                                <span className="stat-label">Transcripciones (Hoy)</span>
                                                 <div className="stat-row">
-                                                    <span className="stat-value">{links.length}</span>
-                                                    <span className="stat-trend positive">↑ 5%</span>
+                                                    <span className="stat-value">
+                                                        {usageStats
+                                                            .filter(s => s.tool_type === 'transcription' && s.date === new Date().toISOString().split('T')[0])
+                                                            .reduce((acc, curr) => acc + curr.count, 0)}
+                                                    </span>
+                                                    <span className="stat-trend positive">Hoy</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -600,11 +624,49 @@ function App() {
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                                             </div>
                                             <div className="stat-card-info">
-                                                <span className="stat-label">Recientes</span>
+                                                <span className="stat-label">Total Acciones</span>
                                                 <div className="stat-row">
-                                                    <span className="stat-value">24</span>
-                                                    <span className="stat-trend text-secondary">Últimos 7 días</span>
+                                                    <span className="stat-value">
+                                                        {usageStats.reduce((acc, curr) => acc + curr.count, 0)}
+                                                    </span>
+                                                    <span className="stat-trend text-secondary">Histórico</span>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="dashboard-charts-row">
+                                        <div className="chart-placeholder-card full-width">
+                                            <div className="card-header-small">
+                                                <h4>Actividad de Links (Semanal)</h4>
+                                                <div className="badge-new">Links</div>
+                                            </div>
+                                            <div className="real-chart-container">
+                                                <ResponsiveContainer width="100%" height={250}>
+                                                    <AreaChart data={
+                                                        // Agrupar por día para la gráfica
+                                                        Object.values(usageStats.filter(s => s.tool_type === 'links').reduce((acc: any, curr) => {
+                                                            if (!acc[curr.date]) acc[curr.date] = { date: curr.date, day: curr.day_of_week, count: 0 };
+                                                            acc[curr.date].count += curr.count;
+                                                            return acc;
+                                                        }, {})).sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7)
+                                                    }>
+                                                        <defs>
+                                                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
+                                                                <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: 'rgba(20, 20, 25, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                            itemStyle={{ color: '#a855f7' }}
+                                                        />
+                                                        <Area type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
                                             </div>
                                         </div>
                                     </div>
@@ -612,31 +674,67 @@ function App() {
                                     <div className="dashboard-charts-row">
                                         <div className="chart-placeholder-card">
                                             <div className="card-header-small">
-                                                <h4>Actividad de Uso</h4>
-                                                <div className="badge-new">Semanal</div>
+                                                <h4>Uso de Transcripción (Whisper)</h4>
+                                                <div className="badge-new" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>Voz</div>
                                             </div>
-                                            <div className="fake-chart">
-                                                {/* Representación visual de un gráfico tipo el de la imagen */}
-                                                <div className="chart-line-bg"></div>
-                                                <div className="chart-bars">
-                                                    {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
-                                                        <div key={i} className="chart-bar" style={{ height: `${h}%` }}></div>
-                                                    ))}
-                                                </div>
+                                            <div className="real-chart-container">
+                                                <ResponsiveContainer width="100%" height={200}>
+                                                    <BarChart data={
+                                                        Object.values(usageStats.filter(s => s.tool_type === 'transcription').reduce((acc: any, curr) => {
+                                                            if (!acc[curr.date]) acc[curr.date] = { date: curr.date, day: curr.day_of_week, count: 0 };
+                                                            acc[curr.date].count += curr.count;
+                                                            return acc;
+                                                        }, {})).sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7)
+                                                    }>
+                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
+                                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: 'rgba(20, 20, 25, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                                        />
+                                                        <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
                                             </div>
                                         </div>
 
-                                        <div className="status-overview-card">
-                                            <h4>Estado del Sistema</h4>
-                                            <div className="status-rings">
-                                                <div className="status-ring-item">
-                                                    <div className="ring purple">60%</div>
-                                                    <span>Base de Datos</span>
-                                                </div>
-                                                <div className="status-ring-item">
-                                                    <div className="ring green">92%</div>
-                                                    <span>Memoria</span>
-                                                </div>
+                                        <div className="chart-placeholder-card">
+                                            <div className="card-header-small">
+                                                <h4>Resumen Diario (Links)</h4>
+                                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Últimos registros por día</p>
+                                            </div>
+                                            <div className="usage-table-mini-container">
+                                                <table className="usage-table-mini">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Día</th>
+                                                            <th>Fecha</th>
+                                                            <th>Usos</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {usageStats
+                                                            .filter(s => s.tool_type === 'links')
+                                                            .slice(0, 5)
+                                                            .map((stat, i) => (
+                                                                <tr key={i}>
+                                                                    <td className="font-semibold">{stat.day_of_week}</td>
+                                                                    <td className="text-secondary" style={{ fontSize: '11px' }}>{stat.date}</td>
+                                                                    <td>
+                                                                        <span className="count-badge">{stat.count}</span>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        {usageStats.filter(s => s.tool_type === 'links').length === 0 && (
+                                                            <tr>
+                                                                <td colSpan={3} style={{ textAlign: 'center', padding: '20px', color: 'rgba(255,255,255,0.3)' }}>
+                                                                    Sin datos aún
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>

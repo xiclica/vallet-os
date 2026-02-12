@@ -94,11 +94,13 @@ func (a *App) setupHotkeys(ctx context.Context) {
 				case uintptr(hotkeyID_Launcher):
 					// Muestra la ventana del buscador.
 					a.ShowWindow()
+					a.LogToolUsage("links")
 
 				case uintptr(hotkeyID_Whisper):
 					// Alterna la grabación de audio Whisper.
 					if !recording {
 						recording = true
+						a.LogToolUsage("transcription")
 
 						// 1. Redimensionar primero (en segundo plano).
 						a.SetRecordingSize()

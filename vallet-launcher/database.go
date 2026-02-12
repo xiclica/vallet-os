@@ -28,6 +28,14 @@ type Folder struct {
 	CreatedAt   string `json:"created_at"`  // Fecha de creación.
 }
 
+// UsageLog representa un registro de uso de una herramienta.
+type UsageLog struct {
+	Date      string `json:"date"`
+	ToolType  string `json:"tool_type"`
+	DayOfWeek string `json:"day_of_week"`
+	Count     int    `json:"count"`
+}
+
 // Database encapsula la conexión a la base de datos SQLite.
 type Database struct {
 	db *sql.DB
@@ -80,6 +88,12 @@ func (d *Database) createTables() error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL UNIQUE,
 			description TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);`,
+		`CREATE TABLE IF NOT EXISTS usage_stats (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			tool_type TEXT NOT NULL,
+			day_of_week TEXT NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);`,
 	}
@@ -303,6 +317,44 @@ func (d *Database) DeleteFolder(id int) error {
 	}
 
 	return tx.Commit()
+}
+
+// ============ Métodos para Estadísticas ============
+
+// LogUsage registra el uso de una herramienta (links o transcription).
+func (d *Database) LogUsage(toolType string, dayOfWeek string) error {
+	_, err := d.db.Exec(
+		"INSERT INTO usage_stats (tool_type, day_of_week) VALUES (?, ?)",
+		toolType, dayOfWeek,
+	)
+	return err
+}
+
+// GetUsageStats recupera el conteo de uso agrupado por día y herramienta.
+func (d *Database) GetUsageStats() ([]UsageLog, error) {
+	rows, err := d.db.Query(`
+		SELECT DATE(created_at) as date, tool_type, day_of_week, COUNT(*) as count 
+		FROM usage_stats 
+		GROUP BY DATE(created_at), tool_type 
+		ORDER BY date DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stats []UsageLog
+	for rows.Next() {
+		var s UsageLog
+		err := rows.Scan(&s.Date, &s.ToolType, &s.DayOfWeek, &s.Count)
+		if err != nil {
+			log.Println("Error scanning usage stat:", err)
+			continue
+		}
+		stats = append(stats, s)
+	}
+
+	return stats, nil
 }
 
 func (d *Database) Close() error {

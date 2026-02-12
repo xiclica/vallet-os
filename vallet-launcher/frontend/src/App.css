@@ -1531,5 +1531,82 @@ input:checked+.slider:before {
 .docs-bullets li {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
+}
+
+/* Dashboard Charts and usage tables */
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.real-chart-container {
+  width: 100%;
+  margin-top: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.usage-table-mini-container {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.usage-table-mini {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.usage-table-mini th {
+  text-align: left;
+  padding: 10px 8px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.usage-table-mini td {
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.count-badge {
+  background: var(--accent);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.section-dashboard header h1 {
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Animations for new elements */
+.stat-card-new,
+.chart-placeholder-card {
+  animation: fadeIn 0.5s ease-out backwards;
+}
+
+.stat-card-new:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stat-card-new:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.stat-card-new:nth-child(3) {
+  animation-delay: 0.3s;
 }

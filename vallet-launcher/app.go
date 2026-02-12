@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"vallet-launcher/ai"
 	"vallet-launcher/audio"
@@ -300,6 +301,34 @@ func (a *App) UpdateFolder(folder Folder) error {
 // DeleteFolder elimina una carpeta.
 func (a *App) DeleteFolder(id int) error {
 	return a.db.DeleteFolder(id)
+}
+
+// LogToolUsage registra en la base de datos el uso de una herramienta.
+func (a *App) LogToolUsage(toolType string) {
+	dayOfWeek := getSpanishDay()
+	err := a.db.LogUsage(toolType, dayOfWeek)
+	if err != nil {
+		fmt.Printf("❌ Error registrando uso de herramienta (%s): %v\n", toolType, err)
+	}
+}
+
+// GetUsageStats obtiene las estadísticas de uso agrupadas para el frontend.
+func (a *App) GetUsageStats() ([]UsageLog, error) {
+	return a.db.GetUsageStats()
+}
+
+// getSpanishDay devuelve el nombre del día actual en español.
+func getSpanishDay() string {
+	days := map[string]string{
+		"Monday":    "Lunes",
+		"Tuesday":   "Martes",
+		"Wednesday": "Miércoles",
+		"Thursday":  "Jueves",
+		"Friday":    "Viernes",
+		"Saturday":  "Sábado",
+		"Sunday":    "Domingo",
+	}
+	return days[time.Now().Weekday().String()]
 }
 
 // PlaySound reproduce un archivo de audio WAV situado en la carpeta 'audios'.
