@@ -16,6 +16,9 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed frontend/src/assets/images/vallet-os-V.png
+var iconData []byte
+
 // main es el punto de entrada principal de la aplicación.
 func main() {
 	app := NewApp()
@@ -58,9 +61,15 @@ func main() {
 // onReady configura el icono y el menú de la bandeja del sistema una vez que está lista.
 func onReady(app *App) func() {
 	return func() {
-		iconData, err := os.ReadFile("build/windows/icon.ico")
-		if err == nil {
+		// Usar los datos incrustados del logo.
+		if len(iconData) > 0 {
 			systray.SetIcon(iconData)
+		} else {
+			// Fallback si por alguna razón el embedding falla.
+			fallbackData, err := os.ReadFile("build/windows/icon.ico")
+			if err == nil {
+				systray.SetIcon(fallbackData)
+			}
 		}
 		systray.SetTitle("Vallet Launcher")
 		systray.SetTooltip("Vallet Launcher")

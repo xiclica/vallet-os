@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
+import valletLogo from './assets/images/vallet-os-V.png';
 import { OpenSomething, HideWindow, GetAllLinks, CreateLink, UpdateLink, DeleteLink, SearchLinks, SetAdminSize, SetLauncherSize, SetLauncherExpandedSize, SetRecordingSize, GetSettingBackend, UpdateSettingBackend, QuitApp, ProcessAudio, GetAllFolders, CreateFolder, UpdateFolder, DeleteFolder, GetUsageStats } from "../wailsjs/go/main/App";
 import { main } from "../wailsjs/go/models";
 import { EventsOn } from "../wailsjs/runtime/runtime";
@@ -514,7 +515,7 @@ function App() {
                     <div className="admin-sidebar">
                         <div className="sidebar-header">
                             <div className="sidebar-header-left">
-                                <div className="logo-icon">V</div>
+                                <img src={valletLogo} alt="Vallet OS Logo" className="sidebar-logo-img" />
                                 <span>Vallet OS</span>
                             </div>
                             <div className="sidebar-header-actions">
@@ -1163,6 +1164,7 @@ function App() {
         return (
             <div className="recording-only-container">
                 <div className="recording-pill">
+                    <img src={valletLogo} alt="Logo" className="recording-logo" />
                     <div className="mic-icon-circle">
                         <svg viewBox="0 0 24 24" fill="white" style={{ width: '18px' }}>
                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />

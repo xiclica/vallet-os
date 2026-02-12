@@ -231,6 +231,13 @@ input::placeholder {
   max-width: fit-content;
 }
 
+.recording-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 @keyframes slidePillUp {
   from {
     transform: translateY(20px);
@@ -481,6 +488,14 @@ input::placeholder {
 .close-btn-compact svg {
   width: 16px;
   height: 16px;
+}
+
+.sidebar-logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .logo-icon {
