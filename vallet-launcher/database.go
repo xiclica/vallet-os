@@ -55,7 +55,19 @@ func NewDatabase() (*Database, error) {
 		return nil, err
 	}
 
+	// Migración: Si no existe la nueva DB, intentar copiar la antigua de .vallet-launcher.
 	dbPath := filepath.Join(dbDir, "vallet.db")
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		oldDbPath := filepath.Join(homeDir, ".vallet-launcher", "vallet.db")
+		if _, err := os.Stat(oldDbPath); err == nil {
+			data, err := os.ReadFile(oldDbPath)
+			if err == nil {
+				_ = os.WriteFile(dbPath, data, 0644)
+				log.Println("✅ Base de datos migrada desde .vallet-launcher")
+			}
+		}
+	}
+
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
