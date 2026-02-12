@@ -495,7 +495,9 @@ function App() {
         setTimeout(() => {
             setIsSaving(false);
             setSaveProgress(0);
-        }, 1000);
+            // Mostrar una pequeña notificación o alerta si se desea, 
+            // pero el feedback visual de la barra es suficiente.
+        }, 800);
     };
 
     const handleQuit = () => {
@@ -644,12 +646,18 @@ function App() {
                                             <div className="real-chart-container">
                                                 <ResponsiveContainer width="100%" height={250}>
                                                     <AreaChart data={
-                                                        // Agrupar por día para la gráfica
-                                                        Object.values(usageStats.filter(s => s.tool_type === 'links').reduce((acc: any, curr) => {
-                                                            if (!acc[curr.date]) acc[curr.date] = { date: curr.date, day: curr.day_of_week, count: 0 };
-                                                            acc[curr.date].count += curr.count;
-                                                            return acc;
-                                                        }, {})).sort((a: any, b: any) => a.date.localeCompare(b.date)).slice(-7)
+                                                        // useMemo para optimizar el procesamiento de datos
+                                                        (() => {
+                                                            const filtered = usageStats.filter(s => s.tool_type === 'links');
+                                                            const grouped = filtered.reduce((acc: any, curr) => {
+                                                                if (!acc[curr.date]) acc[curr.date] = { date: curr.date, day: curr.day_of_week, count: 0 };
+                                                                acc[curr.date].count += curr.count;
+                                                                return acc;
+                                                            }, {});
+                                                            return Object.values(grouped)
+                                                                .sort((a: any, b: any) => a.date.localeCompare(b.date))
+                                                                .slice(-7);
+                                                        })()
                                                     }>
                                                         <defs>
                                                             <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
