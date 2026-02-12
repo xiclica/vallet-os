@@ -1,6 +1,6 @@
 # Configuración de Whisper (Voz a Texto)
 
-Para que la funcionalidad de transcripción funcione, necesitas descargar dos archivos y colocarlos en la carpeta raíz de la aplicación (`vallet-launcher`) o en una carpeta `ai/`.
+Para que la funcionalidad de transcripción funcione, necesitas descargar dos archivos y colocarlos en la carpeta raíz de la aplicación (`vallet-os`) o en una carpeta `ai/`.
 
 ## 1. Descargar Whisper CLI (con soporte GPU)
 Descarga el ejecutable `whisper-cli.exe` optimizado para NVIDIA/CUDA.
@@ -14,8 +14,8 @@ Descarga el modelo `ggml-small.bin`.
 
 ## Estructura final esperada
 ```
-vallet-launcher/
-├── vallet-launcher.exe
+vallet-os/
+├── vallet-os.exe
 ├── whisper-cli.exe
 └── ggml-small.bin
      (o en whisper/whisper.cpp.small/ggml-small.bin)

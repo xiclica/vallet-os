@@ -30,7 +30,7 @@ func main() {
 
 	// Configuración y ejecución de Wails.
 	err := wails.Run(&options.App{
-		Title:            "Vallet Launcher",
+		Title:            "Vallet OS",
 		Width:            720,
 		Height:           150,
 		Frameless:        true,                                  // Sin marcos de ventana estándar.
@@ -71,8 +71,8 @@ func onReady(app *App) func() {
 				systray.SetIcon(fallbackData)
 			}
 		}
-		systray.SetTitle("Vallet Launcher")
-		systray.SetTooltip("Vallet Launcher")
+		systray.SetTitle("Vallet OS")
+		systray.SetTooltip("Vallet OS")
 
 		// Menús de la bandeja.
 		mShow := systray.AddMenuItem("Mostrar", "Muestra la ventana principal")

@@ -1,4 +1,4 @@
-# Estructura del Proyecto: Vallet Launcher
+# Estructura del Proyecto: Vallet OS
 
 Este documento proporciona una visión general de la organización del proyecto y la función de cada uno de sus componentes principales.
 

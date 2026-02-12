@@ -1,5 +1,5 @@
-# Script de Build Completo para Vallet Launcher
-Write-Host "🚀 Iniciando Build de Vallet Launcher..." -ForegroundColor Cyan
+# Script de Build Completo para Vallet OS
+Write-Host "🚀 Iniciando Build de Vallet OS..." -ForegroundColor Cyan
 
 # 1. Ejecutar Wails Build
 Write-Host "🛠️ Ejecutando wails build..." -ForegroundColor Yellow

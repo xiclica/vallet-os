@@ -202,7 +202,7 @@ func (a *App) ShowWindow() {
 // SetAdminSize ajusta el tamaño de la ventana para el panel de administración.
 func (a *App) SetAdminSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 1280, 900)
+		utils.CenterWindowNoActivate("Vallet OS", 1280, 900)
 	} else {
 		wailsruntime.WindowSetSize(a.ctx, 1280, 800)
 		wailsruntime.WindowCenter(a.ctx)
@@ -212,7 +212,7 @@ func (a *App) SetAdminSize() {
 // SetLauncherSize ajusta el tamaño de la ventana al modo buscador minimalista.
 func (a *App) SetLauncherSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 720, 150)
+		utils.CenterWindowNoActivate("Vallet OS", 720, 150)
 	} else {
 		wailsruntime.WindowSetSize(a.ctx, 720, 150)
 		wailsruntime.WindowCenter(a.ctx)
@@ -222,7 +222,7 @@ func (a *App) SetLauncherSize() {
 // SetLauncherExpandedSize expande la ventana para mostrar sugerencias de búsqueda.
 func (a *App) SetLauncherExpandedSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 720, 480)
+		utils.CenterWindowNoActivate("Vallet OS", 720, 480)
 	} else {
 		wailsruntime.WindowSetSize(a.ctx, 720, 480)
 		wailsruntime.WindowCenter(a.ctx)
@@ -232,7 +232,7 @@ func (a *App) SetLauncherExpandedSize() {
 // SetRecordingSize ajusta la ventana a un indicador pequeño durante la grabación de voz.
 func (a *App) SetRecordingSize() {
 	if runtime.GOOS == "windows" {
-		utils.CenterWindowNoActivate("Vallet Launcher", 280, 80)
+		utils.CenterWindowNoActivate("Vallet OS", 280, 80)
 	} else {
 		wailsruntime.WindowSetSize(a.ctx, 280, 80)
 		wailsruntime.WindowCenter(a.ctx)

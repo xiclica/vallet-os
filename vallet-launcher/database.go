@@ -50,7 +50,7 @@ func NewDatabase() (*Database, error) {
 	}
 
 	// Crear carpeta oculta para la base de datos en el home del usuario.
-	dbDir := filepath.Join(homeDir, ".vallet-launcher")
+	dbDir := filepath.Join(homeDir, ".vallet-os")
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return nil, err
 	}

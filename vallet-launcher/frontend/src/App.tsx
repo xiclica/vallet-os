@@ -502,7 +502,7 @@ function App() {
     };
 
     const handleQuit = () => {
-        if (confirm('¿Estás seguro de que quieres cerrar Vallet Launcher por completo?')) {
+        if (confirm('¿Estás seguro de que quieres cerrar Vallet OS por completo?')) {
             QuitApp();
         }
     };
@@ -960,7 +960,7 @@ function App() {
                                 <div className="section-settings">
                                     <header className="dashboard-content-header">
                                         <h1>Configuración</h1>
-                                        <p>Personaliza el comportamiento de Vallet Launcher.</p>
+                                        <p>Personaliza el comportamiento de Vallet OS.</p>
                                     </header>
 
                                     <div className="settings-group">
@@ -1033,7 +1033,7 @@ function App() {
                                         <div className="settings-item" style={{ border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                                             <div className="settings-info">
                                                 <span>Cerrar Aplicación</span>
-                                                <p>Detiene el proceso de Vallet Launcher por completo.</p>
+                                                <p>Detiene el proceso de Vallet OS por completo.</p>
                                             </div>
                                             <button className="btn-danger-outline" onClick={handleQuit}>
                                                 Cerrar Todo

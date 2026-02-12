@@ -114,7 +114,7 @@ func (a *App) setupHotkeys(ctx context.Context) {
 						}
 
 						// 4. Mostrar la ventana finalmente (ya configurada).
-						utils.ShowWindowNoActivate("Vallet Launcher")
+						utils.ShowWindowNoActivate("Vallet OS")
 
 						fmt.Println("🎙️ Iniciando grabación...")
 					} else {

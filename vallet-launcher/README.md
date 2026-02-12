@@ -1,10 +1,10 @@
-# Vallet Launcher
+# Vallet OS
 
 Una aplicación de escritorio tipo Alfred/Spotlight construida con Wails (Go + React + TypeScript) para Windows, con gestión de links mediante SQLite.
 
 ## 🚀 Funcionalidades Principales
 
-Vallet Launcher no es solo un buscador, es tu asistente central de productividad:
+Vallet OS no es solo un buscador, es tu asistente central de productividad:
 
 -   **🔍 Buscador Inteligente (`Ctrl + Shift + Espacio`)**: 
     -   **Acceso Instantáneo**: Lanzador tipo Spotlight/Alfred optimizado para Windows.
@@ -62,8 +62,8 @@ vallet-launcher/
 ## 🗄️ Base de Datos
 
 La base de datos SQLite se crea automáticamente en:
-- Windows: `C:\Users\{usuario}\.vallet-launcher\vallet.db`
-- Mac/Linux: `~/.vallet-launcher/vallet.db`
+- Windows: `C:\Users\{usuario}\.vallet-os\vallet.db`
+- Mac/Linux: `~/.vallet-os/vallet.db`
 
 ### Estructura de la tabla `links`:
 ```sql
@@ -134,7 +134,7 @@ La aplicación utiliza:
 ## 💡 Uso y Atajos
 
 ### Atajos Globales (En cualquier momento)
-- **`Ctrl + Shift + Espacio`**: Abre/Muestra el buscador de Vallet Launcher.
+- **`Ctrl + Shift + Espacio`**: Abre/Muestra el buscador de Vallet OS.
 - **`Ctrl + Alt + Espacio`**: Activa/Desactiva la grabación de voz (Whisper). Al terminar, el texto se pegará donde esté el cursor.
 
 ### Dentro de la Aplicación

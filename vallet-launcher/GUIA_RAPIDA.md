@@ -1,4 +1,4 @@
-# Guía Rápida - Vallet Launcher
+# Guía Rápida - Vallet OS
 
 ## 🚀 Inicio Rápido
 
@@ -111,7 +111,7 @@ Usa categorías para organizar tus links:
 
 La base de datos SQLite se guarda en:
 ```
-C:\Users\{TuUsuario}\.vallet-launcher\vallet.db
+C:\Users\{TuUsuario}\.vallet-os\vallet.db
 ```
 
 Puedes hacer backup de este archivo para guardar tus links.
@@ -146,7 +146,7 @@ wails dev
 
 ### Error de base de datos
 - La base de datos se crea automáticamente
-- Si hay problemas, elimina: `C:\Users\{TuUsuario}\.vallet-launcher\vallet.db`
+- Si hay problemas, elimina: `C:\Users\{TuUsuario}\.vallet-os\vallet.db`
 - Se recreará al iniciar la app
 
 ### Los links no aparecen en la búsqueda
@@ -162,6 +162,6 @@ cd "c:\Dev\Go\Vallet OS GO\vallet-launcher"
 wails build
 ```
 
-El ejecutable estará en: `build\bin\vallet-launcher.exe`
+El ejecutable estará en: `build\bin\vallet-os.exe`
 
 ¡Disfruta de tu launcher personalizado! 🚀
